@@ -1,144 +1,272 @@
 # Simple Epoch Converter
 
 ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
+![macOS](https://img.shields.io/badge/macOS-13.0+-green.svg)
 ![Swift](https://img.shields.io/badge/Swift-5.0+-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![macOS](https://img.shields.io/badge/macOS-13.0+-green.svg)
 
-Un'applicazione macOS semplice e veloce per convertire timestamp epoch in date leggibili.
+A simple and fast macOS menu bar application to convert epoch timestamps to human-readable dates.
 
-## 🎯 Caratteristiche
+## ✨ Features
 
-- **Conversione istantanea**: Seleziona un timestamp epoch ovunque sul Mac e premi lo shortcut
-- **Shortcut globale**: `⌘ + ⇧ + E` (Command + Shift + E)
-- **Supporto multiplo**: Gestisce sia timestamp in secondi che in millisecondi
-- **Tempo relativo**: Mostra quanto tempo è passato/manca alla data
-- **Menu bar icon**: Icona discreta nella barra del menu per accesso rapido
-- **Copia facile**: Pulsanti per copiare sia l'epoch che la data convertita
+- **Instant Conversion**: Select an epoch timestamp anywhere on your Mac and press the global shortcut
+- **Global Shortcut**: `⌘ + ⇧ + E` (Command + Shift + E) works system-wide
+- **Multiple Formats**: Handles both seconds and milliseconds timestamps
+- **Relative Time**: Shows how long ago or until the date ("3 days ago", "in 2 hours")
+- **Menu Bar Icon**: Discreet clock icon in the menu bar for quick access
+- **SwiftUI Interface**: Modern, native macOS interface with floating result window
+- **Easy Copy**: Copy both epoch and converted date with a single click
 
-## 🚀 Come usare
+## 🚀 Usage
 
-1. **Prima volta**: L'app chiederà i permessi di accessibilità. Vai su:
-   - Preferenze di Sistema → Privacy e Sicurezza → Accessibilità
-   - Aggiungi SimpleEpochConverter alla lista delle app autorizzate
+### First Time Setup
 
-2. **Uso normale**:
-   - Seleziona un timestamp epoch in qualsiasi app (browser, editor, terminale, ecc.)
-   - Premi `⌘ + ⇧ + E`
-   - La finestra con il risultato apparirà automaticamente
+1. Grant accessibility permissions when prompted:
+   - Go to **System Preferences** → **Privacy & Security** → **Accessibility**
+   - Add **SimpleEpochConverter** to the authorized apps list
+   - Restart the app after granting permissions
 
-3. **Alternative**:
-   - Clicca sull'icona nella menu bar per vedere l'ultima conversione
-   - Premi `ESC` o clicca "Chiudi" per chiudere la finestra del risultato
+### Converting Timestamps
 
-## 📋 Esempi di timestamp supportati
+1. **Select** an epoch timestamp in any app (browser, terminal, text editor, etc.)
+2. **Press** `⌘ + ⇧ + E`
+3. **View** the converted date in the result window
 
-- **Secondi**: `1701619200` → 3 dicembre 2023
-- **Millisecondi**: `1701619200000` → 3 dicembre 2023
-- **Con testo**: "timestamp: 1701619200" → Estrae automaticamente il numero
+Alternatively, click the menu bar icon to view the last conversion.
 
-## 🛠️ Compilazione
+### Examples
 
-### Prerequisiti
-- macOS 13.0 o superiore
-- Xcode Command Line Tools (oppure Xcode 14.0+)
-- Swift 5.0+
+- **Seconds**: `1733184000` → December 3, 2024
+- **Milliseconds**: `1733184000000` → December 3, 2024
+- **In text**: "timestamp: 1733184000" → Automatically extracts the number
 
-### Opzione A: Compilazione Rapida (senza Xcode) ⚡
+## 🛠️ Installation
 
-1. Installa Xcode Command Line Tools se non li hai:
-   ```bash
-   xcode-select --install
-   ```
+### Option A: Build with Xcode (Recommended)
 
-2. Compila ed esegui:
-   ```bash
-   cd /Users/alessandrobedini/CodeProjects/SimpleEpochConverter
-   ./build.sh
-   ./run.sh
-   ```
-
-📖 **Guida completa**: Vedi [TESTING_WITHOUT_XCODE.md](TESTING_WITHOUT_XCODE.md) per istruzioni dettagliate
-
-### Opzione B: Compilazione con Xcode
-
-1. Apri il progetto in Xcode:
+1. Open the project:
    ```bash
    open SimpleEpochConverter.xcodeproj
    ```
 
-2. Seleziona il target "SimpleEpochConverter" e il tuo team di sviluppo
+2. Select your development team in the project settings
 
-3. Compila ed esegui:
-   - Premi `⌘ + R` oppure
-   - Product → Run
+3. Build and run (`⌘ + R`)
 
-### Nota sui permessi
+### Option B: Build from Terminal (No Xcode Required)
 
-L'app richiede i seguenti permessi:
-- **Accessibilità**: Per leggere il testo selezionato
-- **Apple Events**: Per simulare la combinazione Cmd+C
+You can compile and run the app using only the Swift compiler:
 
-Questi permessi sono necessari solo per il funzionamento dello shortcut globale.
+```bash
+# Quick start - builds and runs the app
+./manage.sh start
+```
 
-## 📁 Struttura del progetto
+See the [Building Without Xcode](#building-without-xcode) section for details.
+
+## 🔧 Building Without Xcode
+
+### Prerequisites
+
+- macOS 13.0 or later
+- Xcode Command Line Tools (not full Xcode)
+
+Install Command Line Tools:
+```bash
+xcode-select --install
+```
+
+### Build Commands
+
+The `manage.sh` script provides all necessary build commands:
+
+```bash
+# Build the app
+./manage.sh build
+
+# Run the app
+./manage.sh run
+
+# Build and run
+./manage.sh start
+
+# Verify build integrity
+./manage.sh verify
+
+# Clean build artifacts
+./manage.sh clean
+
+# Rebuild from scratch
+./manage.sh rebuild
+
+# Show all commands
+./manage.sh help
+```
+
+### How It Works
+
+The build script:
+
+1. Automatically detects your CPU architecture (Intel/Apple Silicon)
+2. Compiles Swift files using `swiftc`
+3. Creates a proper `.app` bundle structure
+4. Generates `Info.plist` with correct values
+5. Sets up all necessary permissions
+
+The resulting app is functionally identical to one built with Xcode!
+
+### Build Output
+
+After building, the app is located at:
+```
+build/SimpleEpochConverter.app
+```
+
+## 📋 Available Commands
+
+The `manage.sh` script provides a unified interface for all operations:
+
+| Command | Description |
+|---------|-------------|
+| `build` | Compile the application |
+| `run` | Launch the application |
+| `start` | Build and run in one command |
+| `stop` | Terminate the application |
+| `restart` | Stop and restart the application |
+| `rebuild` | Clean and rebuild from scratch |
+| `verify` | Verify build integrity and configuration |
+| `clean` | Remove build artifacts |
+| `status` | Check if app is running |
+| `help` | Show all available commands |
+
+## 🔐 Permissions
+
+The app requires the following permissions:
+
+- **Accessibility**: To read selected text when using the global shortcut
+- **Apple Events**: To simulate `Cmd+C` for copying selected text
+
+These permissions are only needed for the global shortcut functionality. The app will request them automatically on first launch.
+
+### Security Note
+
+Without code signing, macOS may show a security warning on first launch:
+
+1. Go to **System Preferences** → **Privacy & Security**
+2. Click **"Open Anyway"** next to the SimpleEpochConverter message
+3. Confirm by clicking **"Open"**
+
+## 🎨 Customization
+
+### Change the Shortcut
+
+Edit `HotKeyManager.swift`:
+
+```swift
+// Example: Change to Cmd+Shift+T instead of Cmd+Shift+E
+let modifiers = UInt32(cmdKey | shiftKey)
+let keyCode: UInt32 = 17  // 't' key (14 is 'e')
+```
+
+### Change Date Format
+
+Edit `EpochConverter.swift`:
+
+```swift
+dateFormatter.dateStyle = .long   // .short, .medium, .full
+dateFormatter.timeStyle = .long   // .short, .medium, .full
+dateFormatter.locale = Locale(identifier: "en_US")  // Change locale
+```
+
+## 📁 Project Structure
 
 ```
 SimpleEpochConverter/
-├── SimpleEpochConverterApp.swift  # App principale e AppDelegate
-├── ContentView.swift              # Vista della menu bar
-├── HotKeyManager.swift            # Gestione shortcut globali
-├── EpochConverter.swift           # Logica di conversione
-├── ResultWindow.swift             # Finestra dei risultati
-├── Info.plist                     # Configurazione app
-└── SimpleEpochConverter.entitlements  # Permessi richiesti
+├── SimpleEpochConverterApp.swift   # Main app & AppDelegate
+├── ContentView.swift               # Menu bar view
+├── HotKeyManager.swift             # Global shortcut handler
+├── EpochConverter.swift            # Conversion logic
+├── ResultWindow.swift              # Result popup window
+├── manage.sh                       # Unified management script
+├── Info.plist                      # App configuration
+├── SimpleEpochConverter.entitlements  # Required permissions
+├── SimpleEpochConverter.xcodeproj/ # Xcode project
+├── LICENSE                         # MIT License
+└── README.md                       # This file
 ```
 
-## 🔧 Personalizzazione
+## 🐛 Troubleshooting
 
-### Cambiare lo shortcut
+### The shortcut doesn't work
 
-Modifica il file `HotKeyManager.swift`, nella funzione `registerHotKey()`:
+1. Check that you've granted Accessibility permissions
+2. Restart the app after granting permissions
+3. Ensure the text is selected before pressing the shortcut
+4. Verify no other app is using `⌘ + ⇧ + E`
 
-```swift
-// Esempio: Cmd+Shift+T invece di Cmd+Shift+E
-let modifiers = UInt32(cmdKey | shiftKey)
-let keyCode: UInt32 = 17  // 't' invece di 'e' (14)
+### Build fails with "command not found: swiftc"
+
+Install Xcode Command Line Tools:
+```bash
+xcode-select --install
 ```
 
-### Cambiare il formato della data
+### "The application cannot be opened"
 
-Modifica il file `EpochConverter.swift`, nella funzione `convertEpoch()`:
-
-```swift
-dateFormatter.dateStyle = .long  // Cambia in .short, .medium, .full
-dateFormatter.timeStyle = .long  // Cambia in .short, .medium, .full
-dateFormatter.locale = Locale(identifier: "it_IT")  // Cambia la lingua
+This usually means there's an issue with the app bundle. Try:
+```bash
+./manage.sh rebuild
+./manage.sh verify
 ```
 
-## ⚠️ Risoluzione problemi
+If the issue persists, check that `Info.plist` has the correct executable name:
+```bash
+cat build/SimpleEpochConverter.app/Contents/Info.plist | grep CFBundleExecutable
+```
 
-### Lo shortcut non funziona
-- Verifica che l'app abbia i permessi di accessibilità
-- Riavvia l'app dopo aver concesso i permessi
-- Controlla che lo shortcut non sia in conflitto con altre app
+### App crashes or doesn't appear in menu bar
 
-### La finestra non appare
-- Controlla la console per eventuali errori
-- Verifica che il testo selezionato contenga effettivamente un numero
+Run with logs to see errors:
+```bash
+./manage.sh stop
+build/SimpleEpochConverter.app/Contents/MacOS/SimpleEpochConverter
+```
 
-### L'app non legge la selezione
-- Assicurati che i permessi di Apple Events siano concessi
-- Verifica che il testo sia effettivamente selezionato prima di premere lo shortcut
+### Permission denied errors
 
-## 📝 Licenza
+Remove quarantine attribute:
+```bash
+xattr -cr build/SimpleEpochConverter.app
+```
 
-Questo progetto è rilasciato sotto licenza MIT. Sei libero di usarlo, modificarlo e distribuirlo.
+## 🤝 Contributing
 
-## 👤 Autore
+Contributions are welcome! Feel free to:
 
-Alessandro Bedini
+- Report bugs
+- Suggest new features
+- Submit pull requests
+- Improve documentation
 
-## 🙏 Contributi
+## 📄 License
 
-Contributi, issues e feature requests sono benvenuti!
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with SwiftUI for modern macOS UI
+- Uses Carbon framework for global shortcuts
+- Inspired by the need for quick epoch conversions during development
+
+## 💡 Tips
+
+- **Quick access**: Keep the app running in the background and use the shortcut anytime
+- **Batch conversion**: The app remembers your last conversion, accessible via the menu bar
+- **Development workflow**: Perfect for debugging timestamp issues in logs and databases
+- **Time zones**: All conversions respect your system's timezone settings
+
+---
+
+**Made with ❤️ for developers who work with timestamps**
+
+For support or questions, please open an issue on GitHub.
