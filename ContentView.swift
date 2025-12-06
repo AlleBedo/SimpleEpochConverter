@@ -4,60 +4,116 @@ struct ContentView: View {
     @StateObject private var converter = EpochConverter.shared
     
     var body: some View {
-        VStack(spacing: 20) {
-            Text("Epoch Converter")
-                .font(.title2)
-                .fontWeight(.bold)
+        VStack(spacing: 16) {
+            // Header
+            HStack {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.title2)
+                    .foregroundColor(.accentColor)
+                
+                Text("Epoch Converter")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+            }
             
             if let result = converter.lastConversion {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Epoch:")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text(result.epoch)
-                        .font(.system(.body, design: .monospaced))
-                        .textSelection(.enabled)
+                VStack(spacing: 12) {
+                    // Epoch originale
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("TIMESTAMP EPOCH")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .fontWeight(.medium)
+                        
+                        HStack {
+                            Text(result.epoch)
+                                .font(.system(.body, design: .monospaced))
+                                .fontWeight(.semibold)
+                                .textSelection(.enabled)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(result.epoch, forType: .string)
+                            }) {
+                                Image(systemName: "doc.on.doc")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Copia epoch")
+                        }
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.accentColor.opacity(0.1))
+                    .cornerRadius(8)
                     
-                    Divider()
-                    
-                    Text("Data:")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text(result.date)
-                        .font(.body)
-                        .textSelection(.enabled)
-                    
-                    Text(result.relativeTime)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .italic()
+                    // Data convertita
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("DATA E ORA")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .fontWeight(.medium)
+                        
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(result.date)
+                                    .font(.body)
+                                    .textSelection(.enabled)
+                                
+                                Text(result.relativeTime)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .italic()
+                            }
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(result.date, forType: .string)
+                            }) {
+                                Image(systemName: "doc.on.doc")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Copia data")
+                        }
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.secondary.opacity(0.08))
+                    .cornerRadius(8)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-                .background(Color.secondary.opacity(0.1))
-                .cornerRadius(8)
             } else {
-                VStack(spacing: 10) {
+                VStack(spacing: 12) {
                     Image(systemName: "clock.arrow.circlepath")
-                        .font(.system(size: 40))
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 36))
+                        .foregroundColor(.secondary.opacity(0.6))
                     
-                    Text("Seleziona un timestamp epoch e premi")
-                        .font(.body)
-                    Text("⌘ + ⇧ + E")
-                        .font(.system(.title3, design: .monospaced))
-                        .fontWeight(.bold)
+                    VStack(spacing: 4) {
+                        Text("Seleziona un timestamp e premi")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Text("⌘ + ⇧ + E")
+                            .font(.system(.body, design: .monospaced))
+                            .fontWeight(.bold)
+                            .foregroundColor(.accentColor)
+                    }
                 }
+                .frame(maxHeight: .infinity)
+                .padding(.vertical, 20)
             }
             
             Spacer()
-            
-            Text("Shortcut: ⌘ + ⇧ + E")
-                .font(.caption)
-                .foregroundColor(.secondary)
         }
-        .padding()
-        .frame(width: 400, height: 200)
+        .padding(16)
+        .frame(width: 380, height: 280)
     }
 }
 

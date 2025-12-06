@@ -29,16 +29,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Inizializza il popover
         popover = NSPopover()
-        popover?.contentSize = NSSize(width: 400, height: 200)
+        popover?.contentSize = NSSize(width: 380, height: 280)
         popover?.behavior = .transient
         popover?.contentViewController = NSHostingController(rootView: ContentView())
         
-        // Inizializza l'hot key manager
-        hotKeyManager = HotKeyManager()
+        // Inizializza l'hot key manager e passa il riferimento all'AppDelegate
+        hotKeyManager = HotKeyManager(appDelegate: self)
         hotKeyManager?.registerHotKey()
         
         // Richiedi i permessi di accessibilità
         requestAccessibilityPermissions()
+    }
+    
+    func showPopoverFromHotKey() {
+        // Mostra il popover dalla menu bar quando viene premuto l'hotkey
+        if let button = statusItem?.button {
+            popover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            NSApp.activate(ignoringOtherApps: true)
+        }
     }
     
     @objc func togglePopover() {

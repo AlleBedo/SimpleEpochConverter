@@ -30,6 +30,7 @@ show_help() {
     echo ""
     echo -e "  ${GREEN}build${NC}      Build the application"
     echo -e "  ${GREEN}run${NC}        Run the application"
+    echo -e "  ${GREEN}debug${NC}      Run with console output (for debugging)"
     echo -e "  ${GREEN}start${NC}      Build and run"
     echo -e "  ${GREEN}stop${NC}       Stop the application"
     echo -e "  ${GREEN}restart${NC}    Restart the application"
@@ -113,7 +114,18 @@ cmd_run() {
     fi
     
     echo -e "${GREEN}🚀 Launching...${NC}"
-    open "$APP_BUNDLE"
+    "$EXECUTABLE" > /dev/null 2>&1 &
+}
+
+cmd_run_debug() {
+    if [ ! -d "$APP_BUNDLE" ]; then
+        echo -e "${RED}❌ App not built${NC}"
+        exit 1
+    fi
+    
+    echo -e "${BLUE}🐛 Launching in debug mode (with console output)...${NC}"
+    echo -e "${YELLOW}Press Ctrl+C to stop${NC}"
+    "$EXECUTABLE"
 }
 
 cmd_start() {
@@ -167,6 +179,7 @@ cmd_status() {
 case "${1:-help}" in
     build) cmd_build ;;
     run) cmd_run ;;
+    debug) cmd_run_debug ;;
     start) cmd_start ;;
     stop) cmd_stop ;;
     restart) cmd_restart ;;

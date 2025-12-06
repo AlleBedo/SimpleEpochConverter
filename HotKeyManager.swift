@@ -4,6 +4,11 @@ import Carbon
 class HotKeyManager {
     private var eventHandler: EventHandlerRef?
     private var hotKeyRef: EventHotKeyRef?
+    private weak var appDelegate: AppDelegate?
+    
+    init(appDelegate: AppDelegate) {
+        self.appDelegate = appDelegate
+    }
     
     func registerHotKey() {
         // Registra Cmd+Shift+E
@@ -36,11 +41,12 @@ class HotKeyManager {
     }
     
     private func hotKeyPressed() {
-        print("Hot key premuto!")
+        print("🔥 Hot key premuto!")
         
         // Ottieni il testo selezionato
         if let selectedText = getSelectedText() {
-            print("Testo selezionato: \(selectedText)")
+            print("✅ Testo selezionato: '\(selectedText)'")
+            print("📏 Lunghezza: \(selectedText.count) caratteri")
             
             // Converti l'epoch
             EpochConverter.shared.convertEpoch(selectedText)
@@ -48,8 +54,8 @@ class HotKeyManager {
             // Mostra il risultato
             showResultWindow()
         } else {
-            print("Nessun testo selezionato")
-            showError("Seleziona un timestamp epoch prima di usare lo shortcut")
+            print("❌ Nessun testo selezionato o clipboard non cambiata")
+            showError("Seleziona un timestamp epoch con il mouse\nprima di premere ⌘ + ⇧ + E\n\nEsempio: 1733184000")
         }
     }
     
@@ -57,6 +63,13 @@ class HotKeyManager {
         // Salva la clipboard corrente
         let pasteboard = NSPasteboard.general
         let oldContents = pasteboard.string(forType: .string)
+        let oldChangeCount = pasteboard.changeCount
+        
+        print("📋 Old clipboard: '\(oldContents ?? "empty")'")
+        print("📊 Old change count: \(oldChangeCount)")
+        
+        // Pulisci la clipboard temporaneamente per rilevare se la copia ha funzionato
+        pasteboard.clearContents()
         
         // Simula Cmd+C per copiare il testo selezionato
         let source = CGEventSource(stateID: .combinedSessionState)
@@ -70,29 +83,41 @@ class HotKeyManager {
         cmdCDown?.post(tap: .cghidEventTap)
         cmdCUp?.post(tap: .cghidEventTap)
         
-        // Aspetta un momento per far sì che la clipboard si aggiorni
-        Thread.sleep(forTimeInterval: 0.1)
+        print("⌨️  Cmd+C simulato, aspetto 0.2s...")
+        
+        // Aspetta che la clipboard si aggiorni (aumentato il tempo)
+        Thread.sleep(forTimeInterval: 0.2)
         
         // Ottieni il testo copiato
         let copiedText = pasteboard.string(forType: .string)
+        let newChangeCount = pasteboard.changeCount
+        
+        print("📋 New clipboard: '\(copiedText ?? "empty")'")
+        print("📊 New change count: \(newChangeCount)")
+        
+        // Verifica se la clipboard è cambiata
+        let hasNewContent = newChangeCount != oldChangeCount && copiedText != nil && !copiedText!.isEmpty
+        
+        print("🔍 Has new content: \(hasNewContent)")
         
         // Ripristina la clipboard originale
+        pasteboard.clearContents()
         if let oldContents = oldContents {
-            pasteboard.clearContents()
             pasteboard.setString(oldContents, forType: .string)
         }
         
-        return copiedText
+        // Ritorna il testo solo se effettivamente copiato qualcosa di nuovo
+        if hasNewContent {
+            return copiedText
+        }
+        
+        return nil
     }
     
     private func showResultWindow() {
         DispatchQueue.main.async {
-            // Attiva l'applicazione
-            NSApplication.shared.activate(ignoringOtherApps: true)
-            
-            // Mostra la finestra di risultato
-            let resultWindow = ResultWindow()
-            resultWindow.show()
+            // Chiama il metodo dell'AppDelegate per mostrare il popover dalla menu bar
+            self.appDelegate?.showPopoverFromHotKey()
         }
     }
     
