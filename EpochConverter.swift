@@ -40,11 +40,10 @@ class EpochConverter: ObservableObject {
         
         let date = Date(timeIntervalSince1970: timeInterval)
         
-        // Format the date
+        // Format the date in English
         let dateFormatter = DateFormatter()
-        dateFormatter.dateStyle = .long
-        dateFormatter.timeStyle = .long
-        dateFormatter.locale = Locale.current
+        dateFormatter.dateFormat = "MMMM d, yyyy 'at' HH:mm:ss z"
+        dateFormatter.locale = Locale(identifier: "en_US")
         dateFormatter.timeZone = TimeZone.current
         let dateString = dateFormatter.string(from: date)
         

@@ -48,12 +48,12 @@ class HotKeyManager {
     }
     
     private func hotKeyPressed() {
-        print("🔥 Hot key premuto!")
+        print("🔥 Hot key pressed!")
         
-        // Ottieni il testo selezionato
+        // Get selected text
         if let selectedText = getSelectedText() {
-            print("✅ Testo selezionato: '\(selectedText)'")
-            print("📏 Lunghezza: \(selectedText.count) caratteri")
+            print("✅ Selected text: '\(selectedText)'")
+            print("📏 Length: \(selectedText.count) characters")
             
             // Converti l'epoch
             EpochConverter.shared.convertEpoch(selectedText)
@@ -68,7 +68,7 @@ class HotKeyManager {
     }
     
     private func getSelectedText() -> String? {
-        // Salva la clipboard corrente
+        // Save current clipboard
         let pasteboard = NSPasteboard.general
         let oldContents = pasteboard.string(forType: .string)
         let oldChangeCount = pasteboard.changeCount
@@ -76,10 +76,10 @@ class HotKeyManager {
         print("📋 Old clipboard: '\(oldContents ?? "empty")'")
         print("📊 Old change count: \(oldChangeCount)")
         
-        // Pulisci la clipboard temporaneamente per rilevare se la copia ha funzionato
+        // Clear clipboard temporarily to detect if copy worked
         pasteboard.clearContents()
         
-        // Simula Cmd+C per copiare il testo selezionato
+        // Simulate Cmd+C to copy selected text
         let source = CGEventSource(stateID: .combinedSessionState)
         
         // Cmd+C
@@ -91,12 +91,12 @@ class HotKeyManager {
         cmdCDown?.post(tap: .cghidEventTap)
         cmdCUp?.post(tap: .cghidEventTap)
         
-        print("⌨️  Cmd+C simulato, aspetto 0.2s...")
+        print("⌨️  Cmd+C simulated, waiting 0.2s...")
         
-        // Aspetta che la clipboard si aggiorni (aumentato il tempo)
+        // Wait for clipboard to update
         Thread.sleep(forTimeInterval: 0.2)
         
-        // Ottieni il testo copiato
+        // Get copied text
         let copiedText = pasteboard.string(forType: .string)
         let newChangeCount = pasteboard.changeCount
         

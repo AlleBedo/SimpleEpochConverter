@@ -44,7 +44,7 @@ struct ContentView: View {
                                     .foregroundColor(.secondary)
                             }
                             .buttonStyle(.plain)
-                            .help("Copia epoch")
+                            .help("Copy epoch")
                         }
                     }
                     .padding(12)
@@ -52,9 +52,9 @@ struct ContentView: View {
                     .background(Color.accentColor.opacity(0.1))
                     .cornerRadius(8)
                     
-                    // Data convertita
+                    // Converted date
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("DATA E ORA")
+                        Text("DATE & TIME")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                             .fontWeight(.medium)
@@ -82,7 +82,7 @@ struct ContentView: View {
                                     .foregroundColor(.secondary)
                             }
                             .buttonStyle(.plain)
-                            .help("Copia data")
+                            .help("Copy date")
                         }
                     }
                     .padding(12)
@@ -97,7 +97,7 @@ struct ContentView: View {
                         .foregroundColor(.secondary.opacity(0.6))
                     
                     VStack(spacing: 4) {
-                        Text("Seleziona un timestamp e premi")
+                        Text("Select a timestamp and press")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         Text("⌘ + ⇧ + E")
