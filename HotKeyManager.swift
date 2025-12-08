@@ -11,15 +11,14 @@ class HotKeyManager {
     }
     
     func registerHotKey() {
-        // Registra Cmd+Shift+E
+        let settings = AppSettings.shared
+        
         let hotKeySignature: UInt32 = 0x6570
         let hotKeyID = EventHotKeyID(signature: OSType(hotKeySignature), id: 1)
         
-        // Cmd (⌘) = cmdKey, Shift (⇧) = shiftKey
-        let modifiers = UInt32(cmdKey | shiftKey)
-        
-        // 'e' key code
-        let keyCode: UInt32 = 14
+        // Use settings for modifiers and key code
+        let modifiers = settings.modifierFlags
+        let keyCode = settings.keyCode
         
         var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard),
                                       eventKind: UInt32(kEventHotKeyPressed))
@@ -34,10 +33,18 @@ class HotKeyManager {
             return noErr
         }, 1, &eventType, Unmanaged.passUnretained(self).toOpaque(), &eventHandler)
         
-        // Registra l'hot key
+        // Register the hot key
         RegisterEventHotKey(keyCode, modifiers, hotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef)
         
-        print("Hot key registrato: ⌘ + ⇧ + E")
+        print("Hot key registered: \(settings.shortcutDisplayString)")
+    }
+    
+    func unregisterHotKey() {
+        if let hotKeyRef = hotKeyRef {
+            UnregisterEventHotKey(hotKeyRef)
+            self.hotKeyRef = nil
+            print("Hot key unregistered")
+        }
     }
     
     private func hotKeyPressed() {
@@ -54,8 +61,9 @@ class HotKeyManager {
             // Mostra il risultato
             showResultWindow()
         } else {
-            print("❌ Nessun testo selezionato o clipboard non cambiata")
-            showError("Seleziona un timestamp epoch con il mouse\nprima di premere ⌘ + ⇧ + E\n\nEsempio: 1733184000")
+            print("❌ No text selected or clipboard unchanged")
+            let settings = AppSettings.shared
+            showError("Select an epoch timestamp with your mouse\nbefore pressing \(settings.shortcutDisplayString)\n\nExample: 1733184000")
         }
     }
     

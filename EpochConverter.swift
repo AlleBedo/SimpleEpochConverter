@@ -15,43 +15,43 @@ class EpochConverter: ObservableObject {
     private init() {}
     
     func convertEpoch(_ text: String) {
-        // Rimuovi spazi e caratteri non numerici
+        // Remove spaces and non-numeric characters
         let cleanText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        // Prova a estrarre il numero
+        // Try to extract the number
         guard let epochValue = extractEpochValue(from: cleanText) else {
-            print("Impossibile estrarre un valore epoch valido da: \(cleanText)")
+            print("Unable to extract a valid epoch value from: \(cleanText)")
             return
         }
         
-        // Determina se è in secondi o millisecondi
+        // Determine if it's in seconds or milliseconds
         let timeInterval: TimeInterval
         let epochString: String
         
         if epochValue > 9999999999 {
-            // Millisecondi
+            // Milliseconds
             timeInterval = TimeInterval(epochValue) / 1000.0
             epochString = "\(epochValue) ms"
         } else {
-            // Secondi
+            // Seconds
             timeInterval = TimeInterval(epochValue)
             epochString = "\(epochValue) s"
         }
         
         let date = Date(timeIntervalSince1970: timeInterval)
         
-        // Formatta la data
+        // Format the date
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .long
         dateFormatter.timeStyle = .long
-        dateFormatter.locale = Locale(identifier: "it_IT")
+        dateFormatter.locale = Locale.current
         dateFormatter.timeZone = TimeZone.current
         let dateString = dateFormatter.string(from: date)
         
-        // Calcola il tempo relativo
+        // Calculate relative time
         let relativeString = getRelativeTime(from: date)
         
-        // Aggiorna il risultato
+        // Update the result
         DispatchQueue.main.async {
             self.lastConversion = ConversionResult(
                 epoch: epochString,
@@ -62,7 +62,7 @@ class EpochConverter: ObservableObject {
     }
     
     private func extractEpochValue(from text: String) -> Int64? {
-        // Estrae solo i numeri dal testo
+        // Extract only numbers from text
         let numbersOnly = text.filter { $0.isNumber }
         return Int64(numbersOnly)
     }
@@ -72,45 +72,45 @@ class EpochConverter: ObservableObject {
         let interval = now.timeIntervalSince(date)
         
         if interval < 0 {
-            // Data futura
+            // Future date
             let futureInterval = -interval
             if futureInterval < 60 {
-                return "tra \(Int(futureInterval)) secondi"
+                return "in \(Int(futureInterval)) seconds"
             } else if futureInterval < 3600 {
                 let minutes = Int(futureInterval / 60)
-                return "tra \(minutes) minut\(minutes == 1 ? "o" : "i")"
+                return "in \(minutes) minute\(minutes == 1 ? "" : "s")"
             } else if futureInterval < 86400 {
                 let hours = Int(futureInterval / 3600)
-                return "tra \(hours) or\(hours == 1 ? "a" : "e")"
+                return "in \(hours) hour\(hours == 1 ? "" : "s")"
             } else if futureInterval < 2592000 {
                 let days = Int(futureInterval / 86400)
-                return "tra \(days) giorn\(days == 1 ? "o" : "i")"
+                return "in \(days) day\(days == 1 ? "" : "s")"
             } else if futureInterval < 31536000 {
                 let months = Int(futureInterval / 2592000)
-                return "tra \(months) mes\(months == 1 ? "e" : "i")"
+                return "in \(months) month\(months == 1 ? "" : "s")"
             } else {
                 let years = Int(futureInterval / 31536000)
-                return "tra \(years) ann\(years == 1 ? "o" : "i")"
+                return "in \(years) year\(years == 1 ? "" : "s")"
             }
         } else {
-            // Data passata
+            // Past date
             if interval < 60 {
-                return "\(Int(interval)) secondi fa"
+                return "\(Int(interval)) seconds ago"
             } else if interval < 3600 {
                 let minutes = Int(interval / 60)
-                return "\(minutes) minut\(minutes == 1 ? "o" : "i") fa"
+                return "\(minutes) minute\(minutes == 1 ? "" : "s") ago"
             } else if interval < 86400 {
                 let hours = Int(interval / 3600)
-                return "\(hours) or\(hours == 1 ? "a" : "e") fa"
+                return "\(hours) hour\(hours == 1 ? "" : "s") ago"
             } else if interval < 2592000 {
                 let days = Int(interval / 86400)
-                return "\(days) giorn\(days == 1 ? "o" : "i") fa"
+                return "\(days) day\(days == 1 ? "" : "s") ago"
             } else if interval < 31536000 {
                 let months = Int(interval / 2592000)
-                return "\(months) mes\(months == 1 ? "e" : "i") fa"
+                return "\(months) month\(months == 1 ? "" : "s") ago"
             } else {
                 let years = Int(interval / 31536000)
-                return "\(years) ann\(years == 1 ? "o" : "i") fa"
+                return "\(years) year\(years == 1 ? "" : "s") ago"
             }
         }
     }

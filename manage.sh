@@ -70,12 +70,14 @@ cmd_build() {
         -framework Cocoa \
         -framework SwiftUI \
         -framework Carbon \
+        -framework ServiceManagement \
         -target "$TARGET" \
         "$SCRIPT_DIR/SimpleEpochConverterApp.swift" \
         "$SCRIPT_DIR/ContentView.swift" \
         "$SCRIPT_DIR/HotKeyManager.swift" \
         "$SCRIPT_DIR/EpochConverter.swift" \
-        "$SCRIPT_DIR/ResultWindow.swift"
+        "$SCRIPT_DIR/ResultWindow.swift" \
+        "$SCRIPT_DIR/SettingsView.swift"
     
     cat > "$INFO_PLIST" << 'EOFPLIST'
 <?xml version="1.0" encoding="UTF-8"?>

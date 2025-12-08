@@ -17,39 +17,57 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var hotKeyManager: HotKeyManager?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Nascondi l'icona dal dock
+        // Hide dock icon
         NSApplication.shared.setActivationPolicy(.accessory)
         
-        // Crea l'icona nella menu bar
+        // Create menu bar icon
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem?.button {
             button.image = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: "Epoch Converter")
             button.action = #selector(togglePopover)
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
         
-        // Inizializza il popover
+        // Initialize popover
         popover = NSPopover()
         popover?.contentSize = NSSize(width: 380, height: 280)
         popover?.behavior = .transient
         popover?.contentViewController = NSHostingController(rootView: ContentView())
         
-        // Inizializza l'hot key manager e passa il riferimento all'AppDelegate
+        // Initialize hot key manager
         hotKeyManager = HotKeyManager(appDelegate: self)
         hotKeyManager?.registerHotKey()
         
-        // Richiedi i permessi di accessibilità
+        // Request accessibility permissions
         requestAccessibilityPermissions()
+        
+        // Listen for shortcut changes
+        NotificationCenter.default.addObserver(self, selector: #selector(shortcutChanged), name: NSNotification.Name("ShortcutChanged"), object: nil)
+    }
+    
+    @objc func shortcutChanged() {
+        hotKeyManager?.unregisterHotKey()
+        hotKeyManager?.registerHotKey()
     }
     
     func showPopoverFromHotKey() {
-        // Mostra il popover dalla menu bar quando viene premuto l'hotkey
+        // Show popover from menu bar when hotkey is pressed
         if let button = statusItem?.button {
             popover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             NSApp.activate(ignoringOtherApps: true)
         }
     }
     
-    @objc func togglePopover() {
+    @objc func togglePopover(_ sender: Any?) {
+        guard let event = NSApp.currentEvent else { return }
+        
+        // Right click shows settings menu
+        if event.type == .rightMouseUp {
+            showContextMenu()
+            return
+        }
+        
+        // Left click toggles popover
         if let button = statusItem?.button {
             if popover?.isShown == true {
                 popover?.performClose(nil)
@@ -59,12 +77,40 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     
+    func showContextMenu() {
+        let menu = NSMenu()
+        
+        menu.addItem(NSMenuItem(title: "Show Last Conversion", action: #selector(togglePopover(_:)), keyEquivalent: ""))
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Settings...", action: #selector(openSettings), keyEquivalent: ","))
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        
+        statusItem?.menu = menu
+        statusItem?.button?.performClick(nil)
+        statusItem?.menu = nil
+    }
+    
+    @objc func openSettings() {
+        let settingsView = SettingsView()
+        let hostingController = NSHostingController(rootView: settingsView)
+        
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = "Settings"
+        window.styleMask = [.titled, .closable]
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        window.level = .floating
+        
+        NSApp.activate(ignoringOtherApps: true)
+    }
+    
     func requestAccessibilityPermissions() {
         let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as NSString: true]
         let trusted = AXIsProcessTrustedWithOptions(options)
         
         if !trusted {
-            print("Accessibilità non abilitata. Richiedi i permessi nelle Preferenze di Sistema.")
+            print("Accessibility not enabled. Please grant permissions in System Preferences.")
         }
     }
 }
