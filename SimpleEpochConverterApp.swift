@@ -115,11 +115,47 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func requestAccessibilityPermissions() {
-        let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as NSString: true]
-        let trusted = AXIsProcessTrustedWithOptions(options)
+        // First check without showing prompt
+        let trusted = AXIsProcessTrusted()
         
-        if !trusted {
-            print("Accessibility not enabled. Please grant permissions in System Preferences.")
+        if trusted {
+            print("✅ Accessibility permissions already granted")
+            return
+        }
+        
+        print("⚠️ Accessibility permissions not granted, requesting...")
+        
+        // Show system prompt
+        let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as NSString: true]
+        AXIsProcessTrustedWithOptions(options)
+        
+        // Show our custom alert after system prompt
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            // Check again if permissions were granted
+            if !AXIsProcessTrusted() {
+                let alert = NSAlert()
+                alert.messageText = "Accessibility Permissions Required"
+                alert.informativeText = """
+                SimpleEpochConverter needs Accessibility permissions to:
+                • Copy selected text when you press the hotkey
+                • Read from the system clipboard
+                
+                Please grant permissions in:
+                System Settings → Privacy & Security → Accessibility
+                
+                After granting permissions, the app will work immediately.
+                """
+                alert.alertStyle = .warning
+                alert.addButton(withTitle: "Open System Settings")
+                alert.addButton(withTitle: "Later")
+                
+                NSApp.activate(ignoringOtherApps: true)
+                let response = alert.runModal()
+                
+                if response == .alertFirstButtonReturn {
+                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
+                }
+            }
         }
     }
 }

@@ -50,6 +50,19 @@ class HotKeyManager {
     private func hotKeyPressed() {
         print("🔥 Hot key pressed!")
         
+        // Check if we have accessibility permissions
+        let trusted = AXIsProcessTrusted()
+        if !trusted {
+            print("⚠️  No accessibility permissions")
+            showError("⚠️ Accessibility Permissions Required\n\nPlease grant permissions in:\nSystem Settings → Privacy & Security → Accessibility\n\nThen try again.")
+            
+            // Open System Settings
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
+            }
+            return
+        }
+        
         // Get selected text
         if let selectedText = getSelectedText() {
             print("✅ Selected text: '\(selectedText)'")
