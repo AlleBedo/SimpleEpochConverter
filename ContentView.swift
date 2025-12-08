@@ -3,13 +3,29 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var converter = EpochConverter.shared
     
+    // Load custom icon
+    private var customIcon: Image? {
+        if let resourcePath = Bundle.main.resourcePath,
+           let nsImage = NSImage(contentsOfFile: resourcePath + "/spiral.svg") {
+            nsImage.size = NSSize(width: 24, height: 24)
+            return Image(nsImage: nsImage)
+        }
+        return nil
+    }
+    
     var body: some View {
         VStack(spacing: 16) {
             // Header
             HStack {
-                Image(systemName: "clock.arrow.circlepath")
-                    .font(.title2)
-                    .foregroundColor(.accentColor)
+                Group {
+                    if let icon = customIcon {
+                        icon
+                    } else {
+                        Image(systemName: "clock.arrow.circlepath")
+                    }
+                }
+                .font(.title2)
+                .foregroundColor(.accentColor)
                 
                 Text("Epoch Converter")
                     .font(.headline)
@@ -92,9 +108,16 @@ struct ContentView: View {
                 }
             } else {
                 VStack(spacing: 12) {
-                    Image(systemName: "clock.arrow.circlepath")
-                        .font(.system(size: 36))
-                        .foregroundColor(.secondary.opacity(0.6))
+                    Group {
+                        if let icon = customIcon {
+                            icon
+                                .font(.system(size: 36))
+                        } else {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.system(size: 36))
+                        }
+                    }
+                    .foregroundColor(.secondary.opacity(0.6))
                     
                     VStack(spacing: 4) {
                         Text("Select a timestamp and press")

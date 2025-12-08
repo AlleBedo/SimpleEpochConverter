@@ -23,7 +23,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Create menu bar icon
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: "Epoch Converter")
+            // Try to load custom SVG icon from Resources
+            if let resourcePath = Bundle.main.resourcePath,
+               let image = NSImage(contentsOfFile: resourcePath + "/spiral.svg") {
+                image.size = NSSize(width: 18, height: 18)
+                image.isTemplate = true
+                button.image = image
+            } else {
+                // Fallback to system icon
+                button.image = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: "Epoch Converter")
+            }
             button.action = #selector(togglePopover)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }

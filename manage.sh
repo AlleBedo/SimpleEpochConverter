@@ -38,6 +38,7 @@ show_help() {
     echo -e "  ${GREEN}verify${NC}     Verify build integrity"
     echo -e "  ${GREEN}clean${NC}      Remove build artifacts"
     echo -e "  ${GREEN}status${NC}     Check if app is running"
+    echo -e "  ${GREEN}package${NC}    Create distributable .zip package"
     echo -e "  ${GREEN}help${NC}       Show this message"
     echo ""
 }
@@ -56,6 +57,18 @@ cmd_build() {
     mkdir -p "$BUILD_DIR"
     mkdir -p "$APP_BUNDLE/Contents/MacOS"
     mkdir -p "$APP_BUNDLE/Contents/Resources"
+    
+    # Copy icon if it exists
+    if [ -f "$SCRIPT_DIR/AppIcon.icns" ]; then
+        cp "$SCRIPT_DIR/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/"
+        echo -e "${GREEN}✓ Icon copied${NC}"
+    fi
+    
+    # Copy menu bar icon
+    if [ -f "$SCRIPT_DIR/spiral.svg" ]; then
+        cp "$SCRIPT_DIR/spiral.svg" "$APP_BUNDLE/Contents/Resources/"
+        echo -e "${GREEN}✓ Menu bar icon copied${NC}"
+    fi
     
     ARCH=$(uname -m)
     if [ "$ARCH" = "arm64" ]; then
@@ -90,6 +103,8 @@ cmd_build() {
     <string>com.alessandrobedini.SimpleEpochConverter</string>
     <key>CFBundleName</key>
     <string>SimpleEpochConverter</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -178,6 +193,44 @@ cmd_status() {
     pgrep -f "$APP_NAME" > /dev/null && echo -e "  Running: ${GREEN}Yes${NC}" || echo -e "  Running: ${YELLOW}No${NC}"
 }
 
+cmd_package() {
+    echo -e "${BLUE}📦 Creating distributable package...${NC}"
+    
+    if [ ! -d "$APP_BUNDLE" ]; then
+        echo -e "${RED}❌ App not built. Run './manage.sh build' first${NC}"
+        exit 1
+    fi
+    
+    VERSION=$(grep -A1 "CFBundleShortVersionString" "$INFO_PLIST" | grep string | sed 's/.*<string>\(.*\)<\/string>/\1/')
+    PACKAGE_NAME="SimpleEpochConverter-${VERSION}.zip"
+    PACKAGE_PATH="$BUILD_DIR/$PACKAGE_NAME"
+    
+    echo -e "${BLUE}Creating package: $PACKAGE_NAME${NC}"
+    
+    # Remove quarantine attributes
+    xattr -cr "$APP_BUNDLE"
+    
+    # Create zip
+    cd "$BUILD_DIR"
+    zip -r -q "$PACKAGE_NAME" "$APP_NAME.app"
+    cd "$SCRIPT_DIR"
+    
+    # Calculate SHA256
+    SHA256=$(shasum -a 256 "$PACKAGE_PATH" | cut -d ' ' -f 1)
+    
+    echo -e "${GREEN}✅ Package created!${NC}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "  Location: ${GREEN}$PACKAGE_PATH${NC}"
+    echo -e "  Size: $(du -h "$PACKAGE_PATH" | cut -f1)"
+    echo -e "  SHA256: ${YELLOW}$SHA256${NC}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${YELLOW}Next steps for Homebrew:${NC}"
+    echo -e "1. Create a GitHub release and upload this .zip"
+    echo -e "2. Create a Homebrew formula using this SHA256"
+    echo -e "3. Test with: brew install --build-from-source <formula>"
+}
+
 case "${1:-help}" in
     build) cmd_build ;;
     run) cmd_run ;;
@@ -189,6 +242,7 @@ case "${1:-help}" in
     verify) cmd_verify ;;
     clean) cmd_clean ;;
     status) cmd_status ;;
+    package) cmd_package ;;
     help|--help|-h) show_help ;;
     *) echo -e "${RED}Unknown command: $1${NC}"; show_help; exit 1 ;;
 esac
