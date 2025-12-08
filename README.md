@@ -10,7 +10,7 @@ A simple and fast macOS menu bar application to convert epoch timestamps to huma
 ## ✨ Features
 
 - **Instant Conversion**: Select an epoch timestamp anywhere on your Mac and press the global shortcut
-- **Global Shortcut**: `⌘ + ⇧ + E` (Command + Shift + E) works system-wide
+- **Global Shortcut**: <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>E</kbd> (Command + Shift + E) works system-wide
 - **Multiple Formats**: Handles both seconds and milliseconds timestamps
 - **Relative Time**: Shows how long ago or until the date ("3 days ago", "in 2 hours")
 - **Menu Bar Icon**: Discreet clock icon in the menu bar for quick access
@@ -29,7 +29,7 @@ A simple and fast macOS menu bar application to convert epoch timestamps to huma
 ### Converting Timestamps
 
 1. **Select** an epoch timestamp in any app (browser, terminal, text editor, etc.)
-2. **Press** `⌘ + ⇧ + E`
+2. **Press** <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>E</kbd>
 3. **View** the converted date in the result window
 
 Alternatively, click the menu bar icon to view the last conversion.
@@ -202,7 +202,7 @@ SimpleEpochConverter/
 1. Check that you've granted Accessibility permissions
 2. Restart the app after granting permissions
 3. Ensure the text is selected before pressing the shortcut
-4. Verify no other app is using `⌘ + ⇧ + E`
+4. Verify no other app is using <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>E</kbd>
 
 ### Build fails with "command not found: swiftc"
 
