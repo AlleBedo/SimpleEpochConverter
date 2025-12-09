@@ -1,14 +1,18 @@
 #!/bin/bash
 
-# Script di gestione per SimpleEpochConverter
-# Uso: ./manage.sh [comando]
+# SimpleEpochConverter - Management Script
+# Usage: ./manage.sh [command]
 
 set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-APP_BUNDLE="$SCRIPT_DIR/build/SimpleEpochConverter.app"
+BUILD_DIR="$SCRIPT_DIR/build"
+APP_NAME="SimpleEpochConverter"
+APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
+EXECUTABLE="$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+INFO_PLIST="$APP_BUNDLE/Contents/Info.plist"
 
-# Colori
+# Colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
@@ -17,101 +21,137 @@ NC='\033[0m'
 
 show_help() {
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${GREEN}  SimpleEpochConverter - Gestione App${NC}"
+    echo -e "${GREEN}  SimpleEpochConverter - Management${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
-    echo "Uso: ./manage.sh [comando]"
+    echo "Usage: ./manage.sh [command]"
     echo ""
-    echo "Comandi disponibili:"
+    echo "Available commands:"
     echo ""
-    echo -e "  ${GREEN}build${NC}      Compila l'applicazione"
-    echo -e "  ${GREEN}run${NC}        Esegue l'applicazione"
-    echo -e "  ${GREEN}rebuild${NC}    Ricompila completamente (clean + build)"
-    echo -e "  ${GREEN}stop${NC}       Ferma l'applicazione"
-    echo -e "  ${GREEN}restart${NC}    Riavvia l'applicazione (stop + run)"
-    echo -e "  ${GREEN}status${NC}     Verifica se l'app è in esecuzione"
-    echo -e "  ${GREEN}verify${NC}     Verifica che l'app sia compilata correttamente"
-    echo -e "  ${GREEN}clean${NC}      Rimuove i file compilati"
-    echo -e "  ${GREEN}logs${NC}       Mostra i log dell'app"
-    echo -e "  ${GREEN}test${NC}       Test rapido completo (rebuild + run)"
-    echo -e "  ${GREEN}help${NC}       Mostra questo messaggio"
-    echo ""
-    echo "Esempi:"
-    echo "  ./manage.sh build      # Compila l'app"
-    echo "  ./manage.sh run        # Esegue l'app"
-    echo "  ./manage.sh test       # Build e run in un comando"
+    echo -e "  ${GREEN}build${NC}      Build the application"
+    echo -e "  ${GREEN}run${NC}        Run the application"
+    echo -e "  ${GREEN}debug${NC}      Run with console output (for debugging)"
+    echo -e "  ${GREEN}start${NC}      Build and run"
+    echo -e "  ${GREEN}stop${NC}       Stop the application"
+    echo -e "  ${GREEN}restart${NC}    Restart the application"
+    echo -e "  ${GREEN}rebuild${NC}    Clean and rebuild"
+    echo -e "  ${GREEN}verify${NC}     Verify build integrity"
+    echo -e "  ${GREEN}clean${NC}      Remove build artifacts"
+    echo -e "  ${GREEN}status${NC}     Check if app is running"
+    echo -e "  ${GREEN}package${NC}    Create distributable .zip package"
+    echo -e "  ${GREEN}help${NC}       Show this message"
     echo ""
 }
 
 cmd_build() {
-    echo -e "${BLUE}🔨 Compilazione...${NC}"
-    "$SCRIPT_DIR/build.sh"
+    echo -e "${BLUE}🔨 Building SimpleEpochConverter...${NC}"
+    
+    if ! command -v swiftc &> /dev/null; then
+        echo -e "${RED}❌ Swift not found${NC}"
+        exit 1
+    fi
+    
+    echo -e "${GREEN}✓ Swift found${NC}"
+    
+    rm -rf "$BUILD_DIR"
+    mkdir -p "$BUILD_DIR"
+    mkdir -p "$APP_BUNDLE/Contents/MacOS"
+    mkdir -p "$APP_BUNDLE/Contents/Resources"
+    
+    # Copy icon if it exists
+    if [ -f "$SCRIPT_DIR/AppIcon.icns" ]; then
+        cp "$SCRIPT_DIR/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/"
+        echo -e "${GREEN}✓ Icon copied${NC}"
+    fi
+    
+    # Copy menu bar icon
+    if [ -f "$SCRIPT_DIR/spiral.svg" ]; then
+        cp "$SCRIPT_DIR/spiral.svg" "$APP_BUNDLE/Contents/Resources/"
+        echo -e "${GREEN}✓ Menu bar icon copied${NC}"
+    fi
+    
+    ARCH=$(uname -m)
+    if [ "$ARCH" = "arm64" ]; then
+        TARGET="arm64-apple-macos13.0"
+    else
+        TARGET="x86_64-apple-macos13.0"
+    fi
+    
+    echo -e "${BLUE}⚙️  Compiling...${NC}"
+    swiftc \
+        -o "$EXECUTABLE" \
+        -framework Cocoa \
+        -framework SwiftUI \
+        -framework Carbon \
+        -framework ServiceManagement \
+        -target "$TARGET" \
+        "$SCRIPT_DIR/SimpleEpochConverterApp.swift" \
+        "$SCRIPT_DIR/ContentView.swift" \
+        "$SCRIPT_DIR/HotKeyManager.swift" \
+        "$SCRIPT_DIR/EpochConverter.swift" \
+        "$SCRIPT_DIR/ResultWindow.swift" \
+        "$SCRIPT_DIR/SettingsView.swift"
+    
+    cat > "$INFO_PLIST" << 'EOFPLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"\>
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>SimpleEpochConverter</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.alessandrobedini.SimpleEpochConverter</string>
+    <key>CFBundleName</key>
+    <string>SimpleEpochConverter</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>This app needs access to Apple Events to copy selected text.</string>
+</dict>
+</plist>
+EOFPLIST
+    
+    echo "APPL????" > "$APP_BUNDLE/Contents/PkgInfo"
+    
+    echo -e "${GREEN}✅ Build completed!${NC}"
 }
 
 cmd_run() {
     if [ ! -d "$APP_BUNDLE" ]; then
-        echo -e "${RED}❌ App non compilata. Esegui prima: ./manage.sh build${NC}"
+        echo -e "${RED}❌ App not built${NC}"
         exit 1
     fi
     
-    echo -e "${GREEN}🚀 Avvio app...${NC}"
-    open "$APP_BUNDLE"
-    sleep 1
-    
-    if pgrep -f "SimpleEpochConverter" > /dev/null; then
-        echo -e "${GREEN}✅ App avviata con successo!${NC}"
-        echo -e "${BLUE}💡 Cerca l'icona dell'orologio nella menu bar${NC}"
-    else
-        echo -e "${YELLOW}⚠️  App avviata, attendi qualche secondo...${NC}"
+    echo -e "${GREEN}🚀 Launching...${NC}"
+    "$EXECUTABLE" > /dev/null 2>&1 &
+}
+
+cmd_run_debug() {
+    if [ ! -d "$APP_BUNDLE" ]; then
+        echo -e "${RED}❌ App not built${NC}"
+        exit 1
     fi
+    
+    echo -e "${BLUE}🐛 Launching in debug mode (with console output)...${NC}"
+    echo -e "${YELLOW}Press Ctrl+C to stop${NC}"
+    "$EXECUTABLE"
+}
+
+cmd_start() {
+    cmd_build
+    cmd_run
 }
 
 cmd_stop() {
-    echo -e "${YELLOW}⏹  Arresto app...${NC}"
-    if pgrep -f "SimpleEpochConverter" > /dev/null; then
-        killall SimpleEpochConverter 2>/dev/null || true
-        echo -e "${GREEN}✅ App fermata${NC}"
-    else
-        echo -e "${BLUE}ℹ️  App non in esecuzione${NC}"
-    fi
-}
-
-cmd_status() {
-    echo -e "${BLUE}📊 Stato SimpleEpochConverter${NC}"
-    echo ""
-    
-    # Verifica compilazione
-    if [ -d "$APP_BUNDLE" ]; then
-        echo -e "  Compilazione: ${GREEN}✅ OK${NC}"
-        BINARY="$APP_BUNDLE/Contents/MacOS/SimpleEpochConverter"
-        if [ -x "$BINARY" ]; then
-            SIZE=$(ls -lh "$BINARY" | awk '{print $5}')
-            echo -e "  Dimensione:   ${BLUE}$SIZE${NC}"
-        fi
-    else
-        echo -e "  Compilazione: ${RED}❌ Non compilata${NC}"
-    fi
-    
-    # Verifica esecuzione
-    if pgrep -f "SimpleEpochConverter" > /dev/null; then
-        PID=$(pgrep -f "SimpleEpochConverter")
-        echo -e "  Esecuzione:   ${GREEN}✅ In esecuzione (PID: $PID)${NC}"
-    else
-        echo -e "  Esecuzione:   ${YELLOW}⏸  Non in esecuzione${NC}"
-    fi
-    
-    echo ""
-}
-
-cmd_clean() {
-    echo -e "${YELLOW}🧹 Pulizia file compilati...${NC}"
-    rm -rf "$SCRIPT_DIR/build"
-    echo -e "${GREEN}✅ Pulizia completata${NC}"
-}
-
-cmd_rebuild() {
-    cmd_clean
-    cmd_build
+    killall "$APP_NAME" 2>/dev/null || echo -e "${BLUE}App not running${NC}"
 }
 
 cmd_restart() {
@@ -120,86 +160,89 @@ cmd_restart() {
     cmd_run
 }
 
-cmd_logs() {
-    echo -e "${BLUE}📋 Log dell'applicazione${NC}"
-    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo ""
-    
-    if pgrep -f "SimpleEpochConverter" > /dev/null; then
-        echo -e "${GREEN}App in esecuzione. Eseguendo da terminale per vedere i log...${NC}"
-        echo ""
-        cmd_stop
-        sleep 1
-        "$APP_BUNDLE/Contents/MacOS/SimpleEpochConverter"
-    else
-        echo -e "${YELLOW}App non in esecuzione. Avvio con log...${NC}"
-        echo ""
-        "$APP_BUNDLE/Contents/MacOS/SimpleEpochConverter"
-    fi
-}
-
-cmd_test() {
-    echo -e "${BLUE}🧪 Test completo${NC}"
-    echo ""
-    cmd_rebuild
-    echo ""
-    cmd_run
-    echo ""
-    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${GREEN}🎉 Test completato!${NC}"
-    echo ""
-    echo -e "${BLUE}Prova ora:${NC}"
-    echo "  1. Apri un editor di testo"
-    echo "  2. Scrivi: 1733184000"
-    echo "  3. Seleziona il numero"
-    echo "  4. Premi: ⌘ + ⇧ + E"
-    echo ""
+cmd_rebuild() {
+    cmd_clean
+    cmd_build
 }
 
 cmd_verify() {
-    echo -e "${BLUE}🔍 Verifica app...${NC}"
-    "$SCRIPT_DIR/verify.sh"
+    echo -e "${BLUE}🔍 Verifying...${NC}"
+    ERRORS=0
+    
+    [ -d "$APP_BUNDLE" ] && echo -e "${GREEN}✅${NC} Bundle OK" || { echo -e "${RED}❌${NC} No bundle"; ERRORS=$((ERRORS+1)); }
+    [ -f "$EXECUTABLE" ] && echo -e "${GREEN}✅${NC} Executable OK" || { echo -e "${RED}❌${NC} No executable"; ERRORS=$((ERRORS+1)); }
+    [ -f "$INFO_PLIST" ] && echo -e "${GREEN}✅${NC} Info.plist OK" || { echo -e "${RED}❌${NC} No Info.plist"; ERRORS=$((ERRORS+1)); }
+    
+    if [ $ERRORS -eq 0 ]; then
+        echo -e "${GREEN}✅ All checks passed!${NC}"
+        exit 0
+    else
+        echo -e "${RED}❌ Found $ERRORS error(s)${NC}"
+        exit 1
+    fi
 }
 
-# Main
-case "${1:-help}" in
-    build)
-        cmd_build
-        ;;
-    run)
-        cmd_run
-        ;;
-    stop)
-        cmd_stop
-        ;;
-    restart)
-        cmd_restart
-        ;;
-    rebuild)
-        cmd_rebuild
-        ;;
-    status)
-        cmd_status
-        ;;
-    verify)
-        cmd_verify
-        ;;
-    clean)
-        cmd_clean
-        ;;
-    logs)
-        cmd_logs
-        ;;
-    test)
-        cmd_test
-        ;;
-    help|--help|-h)
-        show_help
-        ;;
-    *)
-        echo -e "${RED}❌ Comando sconosciuto: $1${NC}"
-        echo ""
-        show_help
+cmd_clean() {
+    rm -rf "$BUILD_DIR"
+    echo -e "${GREEN}✅ Clean completed${NC}"
+}
+
+cmd_status() {
+    echo -e "${BLUE}📊 Status${NC}"
+    [ -d "$APP_BUNDLE" ] && echo -e "  Build: ${GREEN}OK${NC}" || echo -e "  Build: ${RED}Not built${NC}"
+    pgrep -f "$APP_NAME" > /dev/null && echo -e "  Running: ${GREEN}Yes${NC}" || echo -e "  Running: ${YELLOW}No${NC}"
+}
+
+cmd_package() {
+    echo -e "${BLUE}📦 Creating distributable package...${NC}"
+    
+    if [ ! -d "$APP_BUNDLE" ]; then
+        echo -e "${RED}❌ App not built. Run './manage.sh build' first${NC}"
         exit 1
-        ;;
+    fi
+    
+    VERSION=$(grep -A1 "CFBundleShortVersionString" "$INFO_PLIST" | grep string | sed 's/.*<string>\(.*\)<\/string>/\1/')
+    PACKAGE_NAME="SimpleEpochConverter-${VERSION}.zip"
+    PACKAGE_PATH="$BUILD_DIR/$PACKAGE_NAME"
+    
+    echo -e "${BLUE}Creating package: $PACKAGE_NAME${NC}"
+    
+    # Remove quarantine attributes
+    xattr -cr "$APP_BUNDLE"
+    
+    # Create zip
+    cd "$BUILD_DIR"
+    zip -r -q "$PACKAGE_NAME" "$APP_NAME.app"
+    cd "$SCRIPT_DIR"
+    
+    # Calculate SHA256
+    SHA256=$(shasum -a 256 "$PACKAGE_PATH" | cut -d ' ' -f 1)
+    
+    echo -e "${GREEN}✅ Package created!${NC}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "  Location: ${GREEN}$PACKAGE_PATH${NC}"
+    echo -e "  Size: $(du -h "$PACKAGE_PATH" | cut -f1)"
+    echo -e "  SHA256: ${YELLOW}$SHA256${NC}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${YELLOW}Next steps for Homebrew:${NC}"
+    echo -e "1. Create a GitHub release and upload this .zip"
+    echo -e "2. Create a Homebrew formula using this SHA256"
+    echo -e "3. Test with: brew install --build-from-source <formula>"
+}
+
+case "${1:-help}" in
+    build) cmd_build ;;
+    run) cmd_run ;;
+    debug) cmd_run_debug ;;
+    start) cmd_start ;;
+    stop) cmd_stop ;;
+    restart) cmd_restart ;;
+    rebuild) cmd_rebuild ;;
+    verify) cmd_verify ;;
+    clean) cmd_clean ;;
+    status) cmd_status ;;
+    package) cmd_package ;;
+    help|--help|-h) show_help ;;
+    *) echo -e "${RED}Unknown command: $1${NC}"; show_help; exit 1 ;;
 esac
