@@ -1,4 +1,7 @@
-# Simple Epoch Converter
+<div align="center">
+  <img width="96px" src="icon.png" alt="Logo" />
+  <h1>Simple Epoch Converter</h1>
+</div>
 
 ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
 ![macOS](https://img.shields.io/badge/macOS-13.0+-green.svg)
@@ -42,7 +45,21 @@ Alternatively, click the menu bar icon to view the last conversion.
 
 ## 🛠️ Installation
 
-### Option A: Build with Xcode (Recommended)
+### Option A: Install with Homebrew (Easiest)
+
+```bash
+# Add the tap
+brew tap allebedo/tap
+
+# Install the app
+brew install --cask simple-epoch-converter
+```
+
+The app will be automatically installed to `/Applications` and the quarantine attributes will be removed.
+
+**First launch**: You'll need to grant Accessibility permissions in System Settings → Privacy & Security → Accessibility.
+
+### Option B: Build with Xcode
 
 1. Open the project:
    ```bash
@@ -53,13 +70,13 @@ Alternatively, click the menu bar icon to view the last conversion.
 
 3. Build and run (`⌘ + R`)
 
-### Option B: Build from Terminal (No Xcode Required)
+### Option C: Build from Terminal (No Xcode Required)
 
 You can compile and run the app using only the Swift compiler:
 
 ```bash
 # Quick start - builds and runs the app
-./manage.sh start
+./Scripts/manage.sh start
 ```
 
 See the [Building Without Xcode](#building-without-xcode) section for details.
@@ -82,25 +99,25 @@ The `manage.sh` script provides all necessary build commands:
 
 ```bash
 # Build the app
-./manage.sh build
+./Scripts/manage.sh build
 
 # Run the app
-./manage.sh run
+./Scripts/manage.sh run
 
 # Build and run
-./manage.sh start
+./Scripts/manage.sh start
 
 # Verify build integrity
-./manage.sh verify
+./Scripts/manage.sh verify
 
 # Clean build artifacts
-./manage.sh clean
+./Scripts/manage.sh clean
 
 # Rebuild from scratch
-./manage.sh rebuild
+./Scripts/manage.sh rebuild
 
 # Show all commands
-./manage.sh help
+./Scripts/manage.sh help
 ```
 
 ### How It Works
@@ -178,23 +195,6 @@ dateFormatter.timeStyle = .long   // .short, .medium, .full
 dateFormatter.locale = Locale(identifier: "en_US")  // Change locale
 ```
 
-## 📁 Project Structure
-
-```
-SimpleEpochConverter/
-├── SimpleEpochConverterApp.swift   # Main app & AppDelegate
-├── ContentView.swift               # Menu bar view
-├── HotKeyManager.swift             # Global shortcut handler
-├── EpochConverter.swift            # Conversion logic
-├── ResultWindow.swift              # Result popup window
-├── manage.sh                       # Unified management script
-├── Info.plist                      # App configuration
-├── SimpleEpochConverter.entitlements  # Required permissions
-├── SimpleEpochConverter.xcodeproj/ # Xcode project
-├── LICENSE                         # MIT License
-└── README.md                       # This file
-```
-
 ## 🐛 Troubleshooting
 
 ### The shortcut doesn't work
@@ -215,8 +215,8 @@ xcode-select --install
 
 This usually means there's an issue with the app bundle. Try:
 ```bash
-./manage.sh rebuild
-./manage.sh verify
+./Scripts/manage.sh rebuild
+./Scripts/manage.sh verify
 ```
 
 If the issue persists, check that `Info.plist` has the correct executable name:
@@ -228,7 +228,7 @@ cat build/SimpleEpochConverter.app/Contents/Info.plist | grep CFBundleExecutable
 
 Run with logs to see errors:
 ```bash
-./manage.sh stop
+./Scripts/manage.sh stop
 build/SimpleEpochConverter.app/Contents/MacOS/SimpleEpochConverter
 ```
 
