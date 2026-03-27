@@ -23,7 +23,7 @@ class HotKeyManager {
         var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard),
                                       eventKind: UInt32(kEventHotKeyPressed))
         
-        // Installa l'event handler
+        // Install the event handler
         InstallEventHandler(GetApplicationEventTarget(), { (nextHandler, theEvent, userData) -> OSStatus in
             guard let userData = userData else { return OSStatus(eventNotHandledErr) }
             
@@ -68,10 +68,10 @@ class HotKeyManager {
             print("✅ Selected text: '\(selectedText)'")
             print("📏 Length: \(selectedText.count) characters")
             
-            // Converti l'epoch
+            // Convert the epoch
             EpochConverter.shared.convertEpoch(selectedText)
             
-            // Mostra il risultato
+            // Show the result
             showResultWindow()
         } else {
             print("❌ No text selected or clipboard unchanged")
@@ -104,30 +104,36 @@ class HotKeyManager {
         cmdCDown?.post(tap: .cghidEventTap)
         cmdCUp?.post(tap: .cghidEventTap)
         
-        print("⌨️  Cmd+C simulated, waiting 0.2s...")
-        
-        // Wait for clipboard to update
-        Thread.sleep(forTimeInterval: 0.2)
-        
-        // Get copied text
-        let copiedText = pasteboard.string(forType: .string)
-        let newChangeCount = pasteboard.changeCount
+        print("⌨️  Cmd+C simulated, waiting for clipboard...")
+
+        // Poll for clipboard change with timeout
+        var copiedText: String? = nil
+        var newChangeCount = pasteboard.changeCount
+        let deadline = Date().addingTimeInterval(0.5)
+        while Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.02)
+            newChangeCount = pasteboard.changeCount
+            if newChangeCount != oldChangeCount {
+                copiedText = pasteboard.string(forType: .string)
+                break
+            }
+        }
         
         print("📋 New clipboard: '\(copiedText ?? "empty")'")
         print("📊 New change count: \(newChangeCount)")
         
-        // Verifica se la clipboard è cambiata
+        // Check if the clipboard changed
         let hasNewContent = newChangeCount != oldChangeCount && copiedText != nil && !copiedText!.isEmpty
         
         print("🔍 Has new content: \(hasNewContent)")
         
-        // Ripristina la clipboard originale
+        // Restore the original clipboard
         pasteboard.clearContents()
         if let oldContents = oldContents {
             pasteboard.setString(oldContents, forType: .string)
         }
         
-        // Ritorna il testo solo se effettivamente copiato qualcosa di nuovo
+        // Return text only if something new was actually copied
         if hasNewContent {
             return copiedText
         }
@@ -137,7 +143,7 @@ class HotKeyManager {
     
     private func showResultWindow() {
         DispatchQueue.main.async {
-            // Chiama il metodo dell'AppDelegate per mostrare il popover dalla menu bar
+            // Call the AppDelegate method to show the popover from the menu bar
             self.appDelegate?.showPopoverFromHotKey()
         }
     }

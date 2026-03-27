@@ -90,7 +90,6 @@ cmd_build() {
         "$PROJECT_ROOT/Sources/ContentView.swift" \
         "$PROJECT_ROOT/Sources/HotKeyManager.swift" \
         "$PROJECT_ROOT/Sources/EpochConverter.swift" \
-        "$PROJECT_ROOT/Sources/ResultWindow.swift" \
         "$PROJECT_ROOT/Sources/SettingsView.swift"
     
     cat > "$INFO_PLIST" << 'EOFPLIST'

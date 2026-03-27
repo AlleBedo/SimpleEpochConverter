@@ -28,7 +28,7 @@ class EpochConverter: ObservableObject {
         let timeInterval: TimeInterval
         let epochString: String
         
-        if epochValue > 9999999999 {
+        if abs(epochValue) > 9999999999 {
             // Milliseconds
             timeInterval = TimeInterval(epochValue) / 1000.0
             epochString = "\(epochValue) ms"
@@ -61,9 +61,11 @@ class EpochConverter: ObservableObject {
     }
     
     private func extractEpochValue(from text: String) -> Int64? {
-        // Extract only numbers from text
-        let numbersOnly = text.filter { $0.isNumber }
-        return Int64(numbersOnly)
+        // Match an optional minus sign followed by a contiguous sequence of digits
+        guard let match = text.range(of: "-?\\d+", options: .regularExpression) else {
+            return nil
+        }
+        return Int64(text[match])
     }
     
     private func getRelativeTime(from date: Date) -> String {

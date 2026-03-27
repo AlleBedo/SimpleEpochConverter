@@ -21,7 +21,6 @@ SimpleEpochConverter/
 │   ├── SimpleEpochConverterApp.swift
 │   ├── ContentView.swift
 │   ├── SettingsView.swift
-│   ├── ResultWindow.swift
 │   ├── HotKeyManager.swift
 │   └── EpochConverter.swift
 │
@@ -109,8 +108,6 @@ SimpleEpochConverter/
   - Interactive shortcut recorder
   - Launch at login toggle
   - Uses `NSViewRepresentable` for native hotkey capture
-
-- **ResultWindow.swift**: Floating result window (if needed)
 
 - **HotKeyManager.swift**: Global hotkey management
   - Carbon framework integration

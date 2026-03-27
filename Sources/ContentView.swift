@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var converter = EpochConverter.shared
+    @ObservedObject private var converter = EpochConverter.shared
+    @ObservedObject private var settings = AppSettings.shared
     
     // Load custom icon
     private var customIcon: Image? {
@@ -123,7 +124,7 @@ struct ContentView: View {
                         Text("Select a timestamp and press")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                        Text("⌘ + ⇧ + E")
+                        Text(settings.shortcutDisplayString)
                             .font(.system(.body, design: .monospaced))
                             .fontWeight(.bold)
                             .foregroundColor(.accentColor)
