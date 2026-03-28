@@ -87,6 +87,14 @@ struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
     @State private var isRecordingShortcut = false
     
+    private var previewCustomFormat: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.timeZone = TimeZone.current
+        formatter.dateFormat = settings.customDateFormat
+        return formatter.string(from: Date(timeIntervalSince1970: 1700000000))
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -158,6 +166,46 @@ struct SettingsView: View {
                     .disabled(isRecordingShortcut)
                 }
                 
+                // Display Section
+                Section(header: Text("Display")) {
+                    Picker("Date format:", selection: Binding(
+                        get: { settings.dateFormatOption },
+                        set: { settings.saveDateFormat($0) }
+                    )) {
+                        ForEach(DateFormatOption.allCases) { option in
+                            Text(option.displayName).tag(option)
+                        }
+                    }
+
+                    Text(settings.dateFormatOption == .custom
+                         ? "Preview: \(previewCustomFormat)"
+                         : "Example: \(settings.dateFormatOption.example)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    if settings.dateFormatOption == .custom {
+                        TextField("Format pattern", text: Binding(
+                            get: { settings.customDateFormat },
+                            set: { settings.saveCustomDateFormat($0) }
+                        ))
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(.body, design: .monospaced))
+
+                        Text("Uses Unicode date format patterns (e.g. yyyy-MM-dd HH:mm:ss)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Toggle("Show UTC time", isOn: Binding(
+                        get: { settings.showUTC },
+                        set: { settings.saveShowUTC($0) }
+                    ))
+
+                    Text("Display UTC alongside your local timezone in conversion results.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
                 // Startup Section
                 Section(header: Text("Launch")) {
                     Toggle("Launch at login", isOn: $settings.launchAtLogin)
@@ -175,7 +223,7 @@ struct SettingsView: View {
                     HStack {
                         Text("Version")
                         Spacer()
-                        Text("1.0")
+                        Text("1.1.0")
                             .foregroundColor(.secondary)
                     }
                     
@@ -189,29 +237,100 @@ struct SettingsView: View {
             }
             .formStyle(.grouped)
         }
-        .frame(width: 450, height: 400)
+        .frame(width: 450, height: 580)
+    }
+}
+
+enum DateFormatOption: String, CaseIterable, Identifiable {
+    case defaultFormat = "MMMM d, yyyy 'at' HH:mm:ss z"
+    case iso8601 = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+    case rfc2822 = "EEE, dd MMM yyyy HH:mm:ss Z"
+    case short = "yyyy-MM-dd HH:mm:ss"
+    case custom = "custom"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .defaultFormat: return "Default"
+        case .iso8601: return "ISO 8601"
+        case .rfc2822: return "RFC 2822"
+        case .short: return "Short"
+        case .custom: return "Custom"
+        }
+    }
+
+    var example: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.timeZone = TimeZone.current
+        let sampleDate = Date(timeIntervalSince1970: 1700000000)
+        switch self {
+        case .custom:
+            return "User-defined pattern"
+        default:
+            formatter.dateFormat = rawValue
+            return formatter.string(from: sampleDate)
+        }
     }
 }
 
 class AppSettings: ObservableObject {
     static let shared = AppSettings()
-    
+
     // Shortcut settings
     @Published var modifierFlags: UInt32
     @Published var keyCode: UInt32
     @Published var launchAtLogin: Bool
-    
+
+    // Display settings
+    @Published var dateFormatOption: DateFormatOption
+    @Published var customDateFormat: String
+    @Published var showUTC: Bool
+
     private let defaults = UserDefaults.standard
-    
+
     private init() {
         // Load saved settings or use defaults
         let savedModifiers = UInt32(defaults.integer(forKey: "shortcutModifiers"))
         self.modifierFlags = savedModifiers == 0 ? UInt32(cmdKey | shiftKey) : savedModifiers
-        
+
         let savedKeyCode = UInt32(defaults.integer(forKey: "shortcutKeyCode"))
         self.keyCode = savedKeyCode == 0 ? 14 : savedKeyCode
-        
+
         self.launchAtLogin = defaults.bool(forKey: "launchAtLogin")
+
+        // Display settings
+        if let savedFormat = defaults.string(forKey: "dateFormatOption"),
+           let option = DateFormatOption(rawValue: savedFormat) {
+            self.dateFormatOption = option
+        } else {
+            self.dateFormatOption = .defaultFormat
+        }
+        self.customDateFormat = defaults.string(forKey: "customDateFormat") ?? "yyyy/MM/dd HH:mm:ss"
+        self.showUTC = defaults.bool(forKey: "showUTC")
+    }
+
+    var activeDateFormat: String {
+        if dateFormatOption == .custom {
+            return customDateFormat
+        }
+        return dateFormatOption.rawValue
+    }
+
+    func saveDateFormat(_ option: DateFormatOption) {
+        self.dateFormatOption = option
+        defaults.set(option.rawValue, forKey: "dateFormatOption")
+    }
+
+    func saveCustomDateFormat(_ format: String) {
+        self.customDateFormat = format
+        defaults.set(format, forKey: "customDateFormat")
+    }
+
+    func saveShowUTC(_ enabled: Bool) {
+        self.showUTC = enabled
+        defaults.set(enabled, forKey: "showUTC")
     }
     
     var shortcutDisplayString: String {
@@ -239,12 +358,28 @@ class AppSettings: ObservableObject {
     
     private func keyCodeToString(_ code: UInt32) -> String {
         let keyMap: [UInt32: String] = [
+            // Letters
             0: "A", 1: "S", 2: "D", 3: "F", 4: "H", 5: "G", 6: "Z", 7: "X",
             8: "C", 9: "V", 11: "B", 12: "Q", 13: "W", 14: "E", 15: "R",
             16: "Y", 17: "T", 31: "O", 32: "U", 34: "I", 35: "P",
-            37: "L", 38: "J", 40: "K", 45: "N", 46: "M"
+            37: "L", 38: "J", 40: "K", 45: "N", 46: "M",
+            // Numbers
+            18: "1", 19: "2", 20: "3", 21: "4", 22: "6", 23: "5",
+            25: "9", 26: "7", 28: "8", 29: "0",
+            // Special keys
+            36: "↩", 48: "⇥", 49: "Space", 51: "⌫", 53: "⎋",
+            // Arrow keys
+            123: "←", 124: "→", 125: "↓", 126: "↑",
+            // Function keys
+            96: "F5", 97: "F6", 98: "F7", 99: "F3", 100: "F8",
+            101: "F9", 109: "F10", 103: "F11", 111: "F12",
+            118: "F4", 120: "F2", 122: "F1",
+            // Punctuation
+            24: "=", 27: "-", 30: "]", 33: "[", 39: "'",
+            41: ";", 42: "\\", 43: ",", 44: "/", 47: ".",
+            50: "`",
         ]
-        return keyMap[code] ?? "?"
+        return keyMap[code] ?? "Key\(code)"
     }
     
     func saveShortcut(modifiers: UInt32, key: UInt32) {

@@ -1,4 +1,9 @@
-# Simple Epoch Converter
+<table>
+<tr>
+<td><img width="96px" src="Resources/icon.png" alt="Logo" /></td>
+<td><h1>Simple Epoch Converter</h1></td>
+</tr>
+</table>
 
 ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
 ![macOS](https://img.shields.io/badge/macOS-13.0+-green.svg)
@@ -10,253 +15,131 @@ A simple and fast macOS menu bar application to convert epoch timestamps to huma
 ## ✨ Features
 
 - **Instant Conversion**: Select an epoch timestamp anywhere on your Mac and press the global shortcut
-- **Global Shortcut**: <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>E</kbd> (Command + Shift + E) works system-wide
+- **Customizable Shortcut**: Default <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>E</kbd> (customizable from settings)
 - **Multiple Formats**: Handles both seconds and milliseconds timestamps
 - **Relative Time**: Shows how long ago or until the date ("3 days ago", "in 2 hours")
-- **Menu Bar Icon**: Discreet clock icon in the menu bar for quick access
-- **SwiftUI Interface**: Modern, native macOS interface with floating result window
+- **Menu Bar Icon**: Custom spiral icon in the menu bar for quick access
+- **SwiftUI Interface**: Modern, native macOS popover interface
 - **Easy Copy**: Copy both epoch and converted date with a single click
+- **Settings Menu**: Customize shortcuts and enable launch at login
+- **Launch at Login**: Optional automatic startup with macOS
 
 ## 🚀 Usage
+
+![Demo](Resources/demo.gif)
 
 ### First Time Setup
 
 1. Grant accessibility permissions when prompted:
-   - Go to **System Preferences** → **Privacy & Security** → **Accessibility**
+   - Go to **System Settings** → **Privacy & Security** → **Accessibility**
    - Add **SimpleEpochConverter** to the authorized apps list
-   - Restart the app after granting permissions
+
+The app will show a detailed alert with instructions if permissions are needed.
 
 ### Converting Timestamps
 
 1. **Select** an epoch timestamp in any app (browser, terminal, text editor, etc.)
-2. **Press** <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>E</kbd>
-3. **View** the converted date in the result window
+2. **Press** your configured shortcut (default: <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>E</kbd>)
+3. **View** the converted date in the popover window
 
 Alternatively, click the menu bar icon to view the last conversion.
 
+### Customizing Settings
+
+Right-click the menu bar icon to access:
+- **Settings**: Configure custom shortcuts and launch at login
+- **Quit**: Close the application
+
 ### Examples
 
-- **Seconds**: `1733184000` → December 3, 2024
-- **Milliseconds**: `1733184000000` → December 3, 2024
+- **Seconds**: `1733184000` → December 3, 2024 at 01:00:00 CET
+- **Milliseconds**: `1733184000000` → December 3, 2024 at 01:00:00 CET
 - **In text**: "timestamp: 1733184000" → Automatically extracts the number
 
 ## 🛠️ Installation
 
-### Option A: Build with Xcode (Recommended)
-
-1. Open the project:
-   ```bash
-   open SimpleEpochConverter.xcodeproj
-   ```
-
-2. Select your development team in the project settings
-
-3. Build and run (`⌘ + R`)
-
-### Option B: Build from Terminal (No Xcode Required)
-
-You can compile and run the app using only the Swift compiler:
+### Option A: Install with Homebrew (Recommended)
 
 ```bash
-# Quick start - builds and runs the app
-./manage.sh start
+# Add the tap
+brew tap allebedo/tap
+
+# Install the app
+brew install --cask simple-epoch-converter
 ```
 
-See the [Building Without Xcode](#building-without-xcode) section for details.
+The app will be automatically installed to `/Applications` and quarantine attributes will be removed.
 
-## 🔧 Building Without Xcode
+### Option B: Download from Releases
 
-### Prerequisites
+1. Download the latest `.zip` from [GitHub Releases](https://github.com/AlleBedo/SimpleEpochConverter/releases)
+2. Extract and move `SimpleEpochConverter.app` to `/Applications`
+3. Remove quarantine: `xattr -cr /Applications/SimpleEpochConverter.app`
+4. Launch the app
 
-- macOS 13.0 or later
-- Xcode Command Line Tools (not full Xcode)
+### Option C: Build from Source
 
-Install Command Line Tools:
-```bash
-xcode-select --install
-```
-
-### Build Commands
-
-The `manage.sh` script provides all necessary build commands:
-
-```bash
-# Build the app
-./manage.sh build
-
-# Run the app
-./manage.sh run
-
-# Build and run
-./manage.sh start
-
-# Verify build integrity
-./manage.sh verify
-
-# Clean build artifacts
-./manage.sh clean
-
-# Rebuild from scratch
-./manage.sh rebuild
-
-# Show all commands
-./manage.sh help
-```
-
-### How It Works
-
-The build script:
-
-1. Automatically detects your CPU architecture (Intel/Apple Silicon)
-2. Compiles Swift files using `swiftc`
-3. Creates a proper `.app` bundle structure
-4. Generates `Info.plist` with correct values
-5. Sets up all necessary permissions
-
-The resulting app is functionally identical to one built with Xcode!
-
-### Build Output
-
-After building, the app is located at:
-```
-build/SimpleEpochConverter.app
-```
-
-## 📋 Available Commands
-
-The `manage.sh` script provides a unified interface for all operations:
-
-| Command | Description |
-|---------|-------------|
-| `build` | Compile the application |
-| `run` | Launch the application |
-| `start` | Build and run in one command |
-| `stop` | Terminate the application |
-| `restart` | Stop and restart the application |
-| `rebuild` | Clean and rebuild from scratch |
-| `verify` | Verify build integrity and configuration |
-| `clean` | Remove build artifacts |
-| `status` | Check if app is running |
-| `help` | Show all available commands |
+See [DEVELOP.md](DEVELOP.md) for detailed build instructions.
 
 ## 🔐 Permissions
 
-The app requires the following permissions:
+The app requires **Accessibility** permissions to:
+- Read selected text when using the global shortcut
+- Simulate <kbd>⌘</kbd> + <kbd>C</kbd> to copy selected text
 
-- **Accessibility**: To read selected text when using the global shortcut
-- **Apple Events**: To simulate `Cmd+C` for copying selected text
-
-These permissions are only needed for the global shortcut functionality. The app will request them automatically on first launch.
+These permissions are only needed for the global shortcut functionality. The app will request them automatically on first launch with detailed instructions.
 
 ### Security Note
 
 Without code signing, macOS may show a security warning on first launch:
 
-1. Go to **System Preferences** → **Privacy & Security**
+1. Go to **System Settings** → **Privacy & Security**
 2. Click **"Open Anyway"** next to the SimpleEpochConverter message
 3. Confirm by clicking **"Open"**
 
-## 🎨 Customization
-
-### Change the Shortcut
-
-Edit `HotKeyManager.swift`:
-
-```swift
-// Example: Change to Cmd+Shift+T instead of Cmd+Shift+E
-let modifiers = UInt32(cmdKey | shiftKey)
-let keyCode: UInt32 = 17  // 't' key (14 is 'e')
-```
-
-### Change Date Format
-
-Edit `EpochConverter.swift`:
-
-```swift
-dateFormatter.dateStyle = .long   // .short, .medium, .full
-dateFormatter.timeStyle = .long   // .short, .medium, .full
-dateFormatter.locale = Locale(identifier: "en_US")  // Change locale
-```
-
-## 📁 Project Structure
-
-```
-SimpleEpochConverter/
-├── SimpleEpochConverterApp.swift   # Main app & AppDelegate
-├── ContentView.swift               # Menu bar view
-├── HotKeyManager.swift             # Global shortcut handler
-├── EpochConverter.swift            # Conversion logic
-├── ResultWindow.swift              # Result popup window
-├── manage.sh                       # Unified management script
-├── Info.plist                      # App configuration
-├── SimpleEpochConverter.entitlements  # Required permissions
-├── SimpleEpochConverter.xcodeproj/ # Xcode project
-├── LICENSE                         # MIT License
-└── README.md                       # This file
-```
+When installed via Homebrew, the quarantine attribute is automatically removed.
 
 ## 🐛 Troubleshooting
 
 ### The shortcut doesn't work
 
-1. Check that you've granted Accessibility permissions
-2. Restart the app after granting permissions
-3. Ensure the text is selected before pressing the shortcut
-4. Verify no other app is using <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>E</kbd>
+1. Check that you've granted Accessibility permissions in System Settings
+2. Make sure text is selected before pressing the shortcut
+3. Verify no other app is using the same shortcut
+4. Try changing the shortcut from the app's settings menu
 
-### Build fails with "command not found: swiftc"
+### "Cannot verify that SimpleEpochConverter is free from malware"
 
-Install Xcode Command Line Tools:
+Run this command to remove the quarantine attribute:
 ```bash
-xcode-select --install
+xattr -cr /Applications/SimpleEpochConverter.app
 ```
 
-### "The application cannot be opened"
+Or install via Homebrew, which handles this automatically.
 
-This usually means there's an issue with the app bundle. Try:
-```bash
-./manage.sh rebuild
-./manage.sh verify
-```
+### App doesn't appear in Spotlight
 
-If the issue persists, check that `Info.plist` has the correct executable name:
-```bash
-cat build/SimpleEpochConverter.app/Contents/Info.plist | grep CFBundleExecutable
-```
+The app should be visible in Spotlight. If not:
+1. Check that the app is in `/Applications/`
+2. Try rebuilding Spotlight index: `sudo mdutil -E /`
 
-### App crashes or doesn't appear in menu bar
-
-Run with logs to see errors:
-```bash
-./manage.sh stop
-build/SimpleEpochConverter.app/Contents/MacOS/SimpleEpochConverter
-```
-
-### Permission denied errors
-
-Remove quarantine attribute:
-```bash
-xattr -cr build/SimpleEpochConverter.app
-```
+For more troubleshooting and development instructions, see [DEVELOP.md](DEVELOP.md).
 
 ## 🤝 Contributing
 
-Contributions are welcome! Feel free to:
+Contributions are welcome! Please:
 
-- Report bugs
-- Suggest new features
-- Submit pull requests
-- Improve documentation
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+For development setup and guidelines, see [DEVELOP.md](DEVELOP.md).
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Built with SwiftUI for modern macOS UI
-- Uses Carbon framework for global shortcuts
-- Inspired by the need for quick epoch conversions during development
 
 ## 💡 Tips
 
@@ -264,9 +147,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Batch conversion**: The app remembers your last conversion, accessible via the menu bar
 - **Development workflow**: Perfect for debugging timestamp issues in logs and databases
 - **Time zones**: All conversions respect your system's timezone settings
+- **Custom shortcuts**: Configure your preferred key combination from the settings menu
+- **Launch at login**: Enable in settings to have the app ready when you start your Mac
 
 ---
 
 **Made with ❤️ for developers who work with timestamps**
 
-For support or questions, please open an issue on GitHub.
+For support or questions, please open an issue on [GitHub](https://github.com/AlleBedo/SimpleEpochConverter/issues).

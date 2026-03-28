@@ -6,7 +6,8 @@
 set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-BUILD_DIR="$SCRIPT_DIR/build"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+BUILD_DIR="$PROJECT_ROOT/build"
 APP_NAME="SimpleEpochConverter"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 EXECUTABLE="$APP_BUNDLE/Contents/MacOS/$APP_NAME"
@@ -59,14 +60,14 @@ cmd_build() {
     mkdir -p "$APP_BUNDLE/Contents/Resources"
     
     # Copy icon if it exists
-    if [ -f "$SCRIPT_DIR/AppIcon.icns" ]; then
-        cp "$SCRIPT_DIR/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/"
+    if [ -f "$PROJECT_ROOT/Resources/AppIcon.icns" ]; then
+        cp "$PROJECT_ROOT/Resources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/"
         echo -e "${GREEN}✓ Icon copied${NC}"
     fi
     
     # Copy menu bar icon
-    if [ -f "$SCRIPT_DIR/spiral.svg" ]; then
-        cp "$SCRIPT_DIR/spiral.svg" "$APP_BUNDLE/Contents/Resources/"
+    if [ -f "$PROJECT_ROOT/Resources/spiral.svg" ]; then
+        cp "$PROJECT_ROOT/Resources/spiral.svg" "$APP_BUNDLE/Contents/Resources/"
         echo -e "${GREEN}✓ Menu bar icon copied${NC}"
     fi
     
@@ -85,12 +86,11 @@ cmd_build() {
         -framework Carbon \
         -framework ServiceManagement \
         -target "$TARGET" \
-        "$SCRIPT_DIR/SimpleEpochConverterApp.swift" \
-        "$SCRIPT_DIR/ContentView.swift" \
-        "$SCRIPT_DIR/HotKeyManager.swift" \
-        "$SCRIPT_DIR/EpochConverter.swift" \
-        "$SCRIPT_DIR/ResultWindow.swift" \
-        "$SCRIPT_DIR/SettingsView.swift"
+        "$PROJECT_ROOT/Sources/SimpleEpochConverterApp.swift" \
+        "$PROJECT_ROOT/Sources/ContentView.swift" \
+        "$PROJECT_ROOT/Sources/HotKeyManager.swift" \
+        "$PROJECT_ROOT/Sources/EpochConverter.swift" \
+        "$PROJECT_ROOT/Sources/SettingsView.swift"
     
     cat > "$INFO_PLIST" << 'EOFPLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -108,7 +108,7 @@ cmd_build() {
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
+    <string>1.1.0</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>LSUIElement</key>

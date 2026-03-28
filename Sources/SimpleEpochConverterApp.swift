@@ -15,6 +15,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var popover: NSPopover?
     var hotKeyManager: HotKeyManager?
+    var settingsWindow: NSWindow?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Hide dock icon
@@ -39,7 +40,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Initialize popover
         popover = NSPopover()
-        popover?.contentSize = NSSize(width: 380, height: 280)
+        popover?.contentSize = NSSize(width: 380, height: 380)
         popover?.behavior = .transient
         popover?.contentViewController = NSHostingController(rootView: ContentView())
         
@@ -101,61 +102,55 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func openSettings() {
+        if let existing = settingsWindow, existing.isVisible {
+            existing.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
         let settingsView = SettingsView()
         let hostingController = NSHostingController(rootView: settingsView)
-        
+
         let window = NSWindow(contentViewController: hostingController)
         window.title = "Settings"
         window.styleMask = [.titled, .closable]
         window.center()
         window.makeKeyAndOrderFront(nil)
         window.level = .floating
-        
+
+        settingsWindow = window
         NSApp.activate(ignoringOtherApps: true)
     }
     
     func requestAccessibilityPermissions() {
-        // First check without showing prompt
-        let trusted = AXIsProcessTrusted()
-        
-        if trusted {
+        if AXIsProcessTrusted() {
             print("✅ Accessibility permissions already granted")
             return
         }
-        
+
         print("⚠️ Accessibility permissions not granted, requesting...")
-        
-        // Show system prompt
-        let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as NSString: true]
-        AXIsProcessTrustedWithOptions(options)
-        
-        // Show our custom alert after system prompt
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            // Check again if permissions were granted
-            if !AXIsProcessTrusted() {
-                let alert = NSAlert()
-                alert.messageText = "Accessibility Permissions Required"
-                alert.informativeText = """
-                SimpleEpochConverter needs Accessibility permissions to:
-                • Copy selected text when you press the hotkey
-                • Read from the system clipboard
-                
-                Please grant permissions in:
-                System Settings → Privacy & Security → Accessibility
-                
-                After granting permissions, the app will work immediately.
-                """
-                alert.alertStyle = .warning
-                alert.addButton(withTitle: "Open System Settings")
-                alert.addButton(withTitle: "Later")
-                
-                NSApp.activate(ignoringOtherApps: true)
-                let response = alert.runModal()
-                
-                if response == .alertFirstButtonReturn {
-                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
-                }
-            }
+
+        let alert = NSAlert()
+        alert.messageText = "Accessibility Permissions Required"
+        alert.informativeText = """
+            SimpleEpochConverter needs Accessibility permissions to:
+            • Copy selected text when you press the hotkey
+            • Read from the system clipboard
+
+            Please grant permissions in:
+            System Settings → Privacy & Security → Accessibility
+
+            After granting permissions, the app will work immediately.
+            """
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Open System Settings")
+        alert.addButton(withTitle: "Later")
+
+        NSApp.activate(ignoringOtherApps: true)
+        let response = alert.runModal()
+
+        if response == .alertFirstButtonReturn {
+            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
         }
     }
 }

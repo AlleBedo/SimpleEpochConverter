@@ -5,13 +5,22 @@ struct ConversionResult {
     let epoch: String
     let date: String
     let relativeTime: String
+    let utcDate: String?
+}
+
+struct ReverseConversionResult {
+    let date: String
+    let utcDate: String?
+    let epochSeconds: String
+    let epochMilliseconds: String
 }
 
 class EpochConverter: ObservableObject {
     static let shared = EpochConverter()
     
     @Published var lastConversion: ConversionResult?
-    
+    @Published var lastReverseConversion: ReverseConversionResult?
+
     private init() {}
     
     func convertEpoch(_ text: String) {
@@ -28,7 +37,7 @@ class EpochConverter: ObservableObject {
         let timeInterval: TimeInterval
         let epochString: String
         
-        if epochValue > 9999999999 {
+        if abs(epochValue) > 9999999999 {
             // Milliseconds
             timeInterval = TimeInterval(epochValue) / 1000.0
             epochString = "\(epochValue) ms"
@@ -39,33 +48,77 @@ class EpochConverter: ObservableObject {
         }
         
         let date = Date(timeIntervalSince1970: timeInterval)
-        
+        let settings = AppSettings.shared
+
         // Format the date in English
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMMM d, yyyy 'at' HH:mm:ss z"
+        dateFormatter.dateFormat = settings.activeDateFormat
         dateFormatter.locale = Locale(identifier: "en_US")
         dateFormatter.timeZone = TimeZone.current
         let dateString = dateFormatter.string(from: date)
-        
+
+        // Format UTC date if enabled
+        var utcString: String? = nil
+        if settings.showUTC {
+            let utcFormatter = DateFormatter()
+            utcFormatter.dateFormat = settings.activeDateFormat
+            utcFormatter.locale = Locale(identifier: "en_US")
+            utcFormatter.timeZone = TimeZone(identifier: "UTC")
+            utcString = utcFormatter.string(from: date)
+        }
+
         // Calculate relative time
         let relativeString = getRelativeTime(from: date)
-        
+
         // Update the result
         DispatchQueue.main.async {
             self.lastConversion = ConversionResult(
                 epoch: epochString,
                 date: dateString,
-                relativeTime: relativeString
+                relativeTime: relativeString,
+                utcDate: utcString
             )
         }
     }
     
     private func extractEpochValue(from text: String) -> Int64? {
-        // Extract only numbers from text
-        let numbersOnly = text.filter { $0.isNumber }
-        return Int64(numbersOnly)
+        // Match an optional minus sign followed by a contiguous sequence of digits
+        guard let match = text.range(of: "-?\\d+", options: .regularExpression) else {
+            return nil
+        }
+        return Int64(text[match])
     }
     
+    func convertDateToEpoch(_ date: Date) {
+        let epochSeconds = Int64(date.timeIntervalSince1970)
+        let epochMilliseconds = Int64(date.timeIntervalSince1970 * 1000)
+        let settings = AppSettings.shared
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = settings.activeDateFormat
+        dateFormatter.locale = Locale(identifier: "en_US")
+        dateFormatter.timeZone = TimeZone.current
+        let dateString = dateFormatter.string(from: date)
+
+        var utcString: String? = nil
+        if settings.showUTC {
+            let utcFormatter = DateFormatter()
+            utcFormatter.dateFormat = settings.activeDateFormat
+            utcFormatter.locale = Locale(identifier: "en_US")
+            utcFormatter.timeZone = TimeZone(identifier: "UTC")
+            utcString = utcFormatter.string(from: date)
+        }
+
+        DispatchQueue.main.async {
+            self.lastReverseConversion = ReverseConversionResult(
+                date: dateString,
+                utcDate: utcString,
+                epochSeconds: "\(epochSeconds)",
+                epochMilliseconds: "\(epochMilliseconds)"
+            )
+        }
+    }
+
     private func getRelativeTime(from date: Date) -> String {
         let now = Date()
         let interval = now.timeIntervalSince(date)
