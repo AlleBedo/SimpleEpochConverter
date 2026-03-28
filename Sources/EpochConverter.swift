@@ -5,10 +5,12 @@ struct ConversionResult {
     let epoch: String
     let date: String
     let relativeTime: String
+    let utcDate: String?
 }
 
 struct ReverseConversionResult {
     let date: String
+    let utcDate: String?
     let epochSeconds: String
     let epochMilliseconds: String
 }
@@ -46,23 +48,35 @@ class EpochConverter: ObservableObject {
         }
         
         let date = Date(timeIntervalSince1970: timeInterval)
-        
+        let settings = AppSettings.shared
+
         // Format the date in English
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMMM d, yyyy 'at' HH:mm:ss z"
+        dateFormatter.dateFormat = settings.activeDateFormat
         dateFormatter.locale = Locale(identifier: "en_US")
         dateFormatter.timeZone = TimeZone.current
         let dateString = dateFormatter.string(from: date)
-        
+
+        // Format UTC date if enabled
+        var utcString: String? = nil
+        if settings.showUTC {
+            let utcFormatter = DateFormatter()
+            utcFormatter.dateFormat = settings.activeDateFormat
+            utcFormatter.locale = Locale(identifier: "en_US")
+            utcFormatter.timeZone = TimeZone(identifier: "UTC")
+            utcString = utcFormatter.string(from: date)
+        }
+
         // Calculate relative time
         let relativeString = getRelativeTime(from: date)
-        
+
         // Update the result
         DispatchQueue.main.async {
             self.lastConversion = ConversionResult(
                 epoch: epochString,
                 date: dateString,
-                relativeTime: relativeString
+                relativeTime: relativeString,
+                utcDate: utcString
             )
         }
     }
@@ -78,16 +92,27 @@ class EpochConverter: ObservableObject {
     func convertDateToEpoch(_ date: Date) {
         let epochSeconds = Int64(date.timeIntervalSince1970)
         let epochMilliseconds = Int64(date.timeIntervalSince1970 * 1000)
+        let settings = AppSettings.shared
 
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMMM d, yyyy 'at' HH:mm:ss z"
+        dateFormatter.dateFormat = settings.activeDateFormat
         dateFormatter.locale = Locale(identifier: "en_US")
         dateFormatter.timeZone = TimeZone.current
         let dateString = dateFormatter.string(from: date)
 
+        var utcString: String? = nil
+        if settings.showUTC {
+            let utcFormatter = DateFormatter()
+            utcFormatter.dateFormat = settings.activeDateFormat
+            utcFormatter.locale = Locale(identifier: "en_US")
+            utcFormatter.timeZone = TimeZone(identifier: "UTC")
+            utcString = utcFormatter.string(from: date)
+        }
+
         DispatchQueue.main.async {
             self.lastReverseConversion = ReverseConversionResult(
                 date: dateString,
+                utcDate: utcString,
                 epochSeconds: "\(epochSeconds)",
                 epochMilliseconds: "\(epochMilliseconds)"
             )

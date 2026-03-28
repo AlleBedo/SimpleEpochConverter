@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var selectedDate = Date()
     @State private var copiedField: String?
     @State private var currentEpoch: Int64 = Int64(Date().timeIntervalSince1970)
+    @State private var keyMonitor: Any?
 
     private let epochTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -85,9 +86,63 @@ struct ContentView: View {
             .padding(.top, 4)
         }
         .padding(16)
-        .frame(width: 380, height: 380)
+        .frame(width: 380, height: settings.showUTC ? 440 : 380)
         .onReceive(epochTimer) { _ in
             currentEpoch = Int64(Date().timeIntervalSince1970)
+        }
+        .onAppear {
+            keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                guard event.modifierFlags.contains(.command) else { return event }
+                switch event.charactersIgnoringModifiers {
+                case "1":
+                    handleCopyShortcut(index: 1)
+                    return nil
+                case "2":
+                    handleCopyShortcut(index: 2)
+                    return nil
+                default:
+                    return event
+                }
+            }
+        }
+        .onDisappear {
+            if let monitor = keyMonitor {
+                NSEvent.removeMonitor(monitor)
+                keyMonitor = nil
+            }
+        }
+    }
+
+    private func handleCopyShortcut(index: Int) {
+        if mode == .epochToDate {
+            guard let result = converter.lastConversion else { return }
+            switch index {
+            case 1:
+                copyToClipboard(result.epoch, field: "epoch")
+            case 2:
+                copyToClipboard(result.date, field: "date")
+            default: break
+            }
+        } else {
+            guard let result = converter.lastReverseConversion else { return }
+            switch index {
+            case 1:
+                copyToClipboard(result.epochSeconds, field: "epochSec")
+            case 2:
+                copyToClipboard(result.epochMilliseconds, field: "epochMs")
+            default: break
+            }
+        }
+    }
+
+    private func copyToClipboard(_ value: String, field: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(value, forType: .string)
+        withAnimation { copiedField = field }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            withAnimation {
+                if copiedField == field { copiedField = nil }
+            }
         }
     }
 
@@ -130,7 +185,7 @@ struct ContentView: View {
 
                     // Date display
                     resultCard(
-                        label: "DATE & TIME",
+                        label: "DATE & TIME (LOCAL)",
                         background: Color.secondary.opacity(0.08)
                     ) {
                         HStack {
@@ -148,6 +203,25 @@ struct ContentView: View {
                                 Image(systemName: copiedField == "date" ? "checkmark" : "doc.on.doc")
                                     .font(.caption)
                                     .foregroundColor(copiedField == "date" ? .green : .secondary)
+                            }
+                        }
+                    }
+
+                    if let utcDate = result.utcDate {
+                        resultCard(
+                            label: "DATE & TIME (UTC)",
+                            background: Color.secondary.opacity(0.08)
+                        ) {
+                            HStack {
+                                Text(utcDate)
+                                    .font(.body)
+                                    .textSelection(.enabled)
+                                Spacer()
+                                copyButton(value: utcDate, field: "utcDate") {
+                                    Image(systemName: copiedField == "utcDate" ? "checkmark" : "doc.on.doc")
+                                        .font(.caption)
+                                        .foregroundColor(copiedField == "utcDate" ? .green : .secondary)
+                                }
                             }
                         }
                     }
@@ -196,12 +270,23 @@ struct ContentView: View {
             if let result = converter.lastReverseConversion {
                 VStack(spacing: 10) {
                     resultCard(
-                        label: "DATE",
+                        label: "DATE (LOCAL)",
                         background: Color.accentColor.opacity(0.1)
                     ) {
                         Text(result.date)
                             .font(.body)
                             .textSelection(.enabled)
+                    }
+
+                    if let utcDate = result.utcDate {
+                        resultCard(
+                            label: "DATE (UTC)",
+                            background: Color.accentColor.opacity(0.1)
+                        ) {
+                            Text(utcDate)
+                                .font(.body)
+                                .textSelection(.enabled)
+                        }
                     }
 
                     resultCard(
@@ -280,16 +365,7 @@ struct ContentView: View {
         field: String,
         @ViewBuilder label: () -> Label
     ) -> some View {
-        Button(action: {
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(value, forType: .string)
-            withAnimation { copiedField = field }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                withAnimation {
-                    if copiedField == field { copiedField = nil }
-                }
-            }
-        }) {
+        Button(action: { copyToClipboard(value, field: field) }) {
             label()
         }
         .buttonStyle(.plain)
@@ -300,6 +376,7 @@ struct ContentView: View {
         let text = manualInput.trimmingCharacters(in: .whitespaces)
         guard !text.isEmpty else { return }
         converter.convertEpoch(text)
+        manualInput = ""
     }
 }
 
