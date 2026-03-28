@@ -7,11 +7,18 @@ struct ConversionResult {
     let relativeTime: String
 }
 
+struct ReverseConversionResult {
+    let date: String
+    let epochSeconds: String
+    let epochMilliseconds: String
+}
+
 class EpochConverter: ObservableObject {
     static let shared = EpochConverter()
     
     @Published var lastConversion: ConversionResult?
-    
+    @Published var lastReverseConversion: ReverseConversionResult?
+
     private init() {}
     
     func convertEpoch(_ text: String) {
@@ -68,6 +75,25 @@ class EpochConverter: ObservableObject {
         return Int64(text[match])
     }
     
+    func convertDateToEpoch(_ date: Date) {
+        let epochSeconds = Int64(date.timeIntervalSince1970)
+        let epochMilliseconds = Int64(date.timeIntervalSince1970 * 1000)
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMMM d, yyyy 'at' HH:mm:ss z"
+        dateFormatter.locale = Locale(identifier: "en_US")
+        dateFormatter.timeZone = TimeZone.current
+        let dateString = dateFormatter.string(from: date)
+
+        DispatchQueue.main.async {
+            self.lastReverseConversion = ReverseConversionResult(
+                date: dateString,
+                epochSeconds: "\(epochSeconds)",
+                epochMilliseconds: "\(epochMilliseconds)"
+            )
+        }
+    }
+
     private func getRelativeTime(from date: Date) -> String {
         let now = Date()
         let interval = now.timeIntervalSince(date)
