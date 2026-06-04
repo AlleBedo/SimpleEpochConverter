@@ -14,18 +14,18 @@ struct ContentView: View {
     @State private var copiedField: String?
     @State private var currentEpoch: Int64 = Int64(Date().timeIntervalSince1970)
     @State private var keyMonitor: Any?
+    @State private var epochTimer: Timer?
 
-    private let epochTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-
-    // Load custom icon
-    private var customIcon: Image? {
+    private static let customIcon: Image? = {
         if let resourcePath = Bundle.main.resourcePath,
            let nsImage = NSImage(contentsOfFile: resourcePath + "/spiral.svg") {
             nsImage.size = NSSize(width: 24, height: 24)
             return Image(nsImage: nsImage)
         }
         return nil
-    }
+    }()
+
+    private var customIcon: Image? { Self.customIcon }
 
     var body: some View {
         VStack(spacing: 12) {
@@ -87,10 +87,11 @@ struct ContentView: View {
         }
         .padding(16)
         .frame(width: 380, height: settings.showUTC ? 440 : 380)
-        .onReceive(epochTimer) { _ in
-            currentEpoch = Int64(Date().timeIntervalSince1970)
-        }
         .onAppear {
+            currentEpoch = Int64(Date().timeIntervalSince1970)
+            epochTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+                currentEpoch = Int64(Date().timeIntervalSince1970)
+            }
             keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                 guard event.modifierFlags.contains(.command) else { return event }
                 switch event.charactersIgnoringModifiers {
@@ -106,6 +107,8 @@ struct ContentView: View {
             }
         }
         .onDisappear {
+            epochTimer?.invalidate()
+            epochTimer = nil
             if let monitor = keyMonitor {
                 NSEvent.removeMonitor(monitor)
                 keyMonitor = nil
