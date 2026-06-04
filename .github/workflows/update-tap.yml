@@ -1,0 +1,47 @@
+name: Update Homebrew Tap
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-tap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get release info
+        id: release
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          URL="https://github.com/AlleBedo/SimpleEpochConverter/releases/download/v${VERSION}/SimpleEpochConverter-${VERSION}.zip"
+          # Retry download to handle asset propagation delay
+          for i in 1 2 3; do
+            SHA256=$(curl -sfL "$URL" | shasum -a 256 | awk '{print $1}')
+            if [ -n "$SHA256" ] && [ "$SHA256" != "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" ]; then
+              break
+            fi
+            echo "Attempt $i: asset not ready, waiting 30s..."
+            sleep 30
+          done
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+          echo "Resolved version=$VERSION sha256=$SHA256"
+
+      - name: Checkout tap
+        uses: actions/checkout@v4
+        with:
+          repository: AlleBedo/homebrew-tap
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+
+      - name: Update cask version and sha256
+        run: |
+          sed -i 's/version ".*"/version "${{ steps.release.outputs.version }}"/' Casks/simple-epoch-converter.rb
+          sed -i 's/sha256 ".*"/sha256 "${{ steps.release.outputs.sha256 }}"/' Casks/simple-epoch-converter.rb
+          cat Casks/simple-epoch-converter.rb
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --exit-code && echo "No changes to commit" && exit 0
+          git commit -am "Update simple-epoch-converter to ${{ steps.release.outputs.version }}"
+          git push

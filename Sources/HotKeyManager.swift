@@ -84,31 +84,42 @@ class HotKeyManager {
         // Save current clipboard
         let pasteboard = NSPasteboard.general
         let oldContents = pasteboard.string(forType: .string)
-        let oldChangeCount = pasteboard.changeCount
-        
+
         print("📋 Old clipboard: '\(oldContents ?? "empty")'")
+
+        // Wait for the user to release the hotkey modifiers so our synthetic
+        // Cmd+C doesn't get merged with held Shift/Cmd and become Cmd+Shift+C
+        // in the foreground app.
+        let modifierWaitDeadline = Date().addingTimeInterval(0.5)
+        let interferingFlags: CGEventFlags = [.maskCommand, .maskShift, .maskAlternate, .maskControl]
+        while Date() < modifierWaitDeadline {
+            let flags = CGEventSource.flagsState(.combinedSessionState)
+            if flags.intersection(interferingFlags).isEmpty { break }
+            Thread.sleep(forTimeInterval: 0.01)
+        }
+
+        // Snapshot changeCount *after* the modifier wait and *before* posting
+        // Cmd+C, so the poll below truly waits for the copy to land.
+        let oldChangeCount = pasteboard.changeCount
         print("📊 Old change count: \(oldChangeCount)")
-        
-        // Clear clipboard temporarily to detect if copy worked
-        pasteboard.clearContents()
-        
+
         // Simulate Cmd+C to copy selected text
         let source = CGEventSource(stateID: .combinedSessionState)
-        
+
         // Cmd+C
         let cmdCDown = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: true)
         cmdCDown?.flags = .maskCommand
         let cmdCUp = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: false)
         cmdCUp?.flags = .maskCommand
-        
+
         cmdCDown?.post(tap: .cghidEventTap)
         cmdCUp?.post(tap: .cghidEventTap)
-        
+
         print("⌨️  Cmd+C simulated, waiting for clipboard...")
 
         // Poll for clipboard change with timeout
         var copiedText: String? = nil
-        var newChangeCount = pasteboard.changeCount
+        var newChangeCount = oldChangeCount
         let deadline = Date().addingTimeInterval(0.5)
         while Date() < deadline {
             Thread.sleep(forTimeInterval: 0.02)
@@ -118,10 +129,10 @@ class HotKeyManager {
                 break
             }
         }
-        
+
         print("📋 New clipboard: '\(copiedText ?? "empty")'")
         print("📊 New change count: \(newChangeCount)")
-        
+
         // Check if the clipboard changed
         let hasNewContent = newChangeCount != oldChangeCount && copiedText != nil && !copiedText!.isEmpty
         
